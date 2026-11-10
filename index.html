@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THOX Community Mesh — specification v0.4 and laboratory</title>
+<style>
+:root { --ink:#1a1a1a; --muted:#5c6560; --green:#05a451; --paper:#f7f8f6; --line:#d7ddd9; --band:#e8f6ee; }
+html { overflow-x: clip; background:#fff; color:var(--ink); }
+body { margin:0; font-family:Arial, Helvetica, sans-serif; line-height:1.5; }
+main { max-width:64rem; margin:0 auto; padding:2.5rem 1rem 4rem; overflow-wrap:anywhere; }
+h1 { font-weight:400; font-size:2.25rem; line-height:1.15; margin:0.75rem 0 0; }
+h2 { font-weight:400; font-size:1.5rem; margin:0; }
+h3 { font-weight:600; font-size:1.05rem; }
+p, li { max-width:48rem; }
+a { color:var(--green); }
+.brand, footer, .green { color:var(--green); }
+.brand, footer { font-weight:700; }
+.muted { color:var(--muted); }
+.mono { font-family:"Courier New", Courier, monospace; }
+.rule { height:4px; width:4.5rem; background:var(--green); border:0; margin:1.5rem 0; }
+section { border-top:1px solid var(--line); padding:1.75rem 0; }
+section p, section li, section .scroll { margin-top:0.75rem; }
+.meta th { width:34%; background:var(--band); font-weight:400; }
+table { border-collapse:collapse; width:100%; text-align:left; font-size:0.92rem; }
+th, td { border:1px solid var(--line); padding:0.5rem 0.75rem; vertical-align:top; }
+thead th { background:var(--green); color:#fff; font-weight:400; border-color:var(--green); }
+.band, tr.band td { background:var(--band); }
+.scroll { overflow-x:auto; max-width:100%; }
+table.wide { min-width:44rem; }
+pre { overflow-x:auto; max-width:100%; border:1px solid var(--line); background:var(--paper); padding:0.75rem; font-family:"Courier New", Courier, monospace; font-size:12px; white-space:pre; }
+button, .text { font:inherit; min-height:44px; cursor:pointer; }
+button { background:#fff; color:var(--ink); border:1px solid var(--line); padding:0.5rem 0.9rem; }
+button.primary, button[aria-pressed="true"] { background:var(--green); color:#fff; border-color:var(--green); }
+button.text { background:none; border:0; color:var(--green); padding:0.5rem 0; }
+button.good { border-color:var(--green); background:var(--band); }
+.sticky { position:sticky; top:0; background:#fff; display:flex; gap:1rem; overflow-x:auto; z-index:2; padding:0.75rem 0; }
+.contents ol { display:grid; gap:0.25rem; padding-left:1.25rem; }
+@media (min-width:640px) { .contents ol { grid-template-columns:1fr 1fr; } .grid3 { grid-template-columns:1fr 1fr 1fr; } .grid2 { grid-template-columns:1fr 1fr; } }
+.grid3, .grid2, .row, #ctx, #chips, #leave, #latency-controls { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; }
+.grid3, .grid2 { display:grid; }
+.card { border:1px solid var(--line); padding:1rem; background:#fff; }
+.card.good { border-color:var(--green); background:var(--band); }
+.big { font-family:"Courier New", Courier, monospace; font-size:1.8rem; margin:0.5rem 0; }
+.track { height:4px; background:var(--line); margin-top:0.75rem; }
+.bar { height:4px; background:var(--ink); }
+.bar.goodbar { background:var(--green); }
+#paths button, #bench .card { text-align:left; display:flex; flex-direction:column; gap:0.25rem; }
+#blocks, #rejected { list-style:none; padding:0; border:1px solid var(--line); }
+#blocks li, #rejected li { padding:0.6rem 0.8rem; border-top:1px solid var(--line); }
+figure { border:1px solid var(--line); margin:1rem 0; }
+figcaption { background:var(--band); border-bottom:1px solid var(--line); padding:0.5rem 0.75rem; }
+figure .grid2, figure ol { padding:1rem; }
+figure li { border:1px solid var(--line); padding:0.5rem 0.75rem; margin:0.4rem 0; list-style:none; }
+footer { border-top:1px solid var(--line); padding:1.75rem 0; }
+:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+</style>
+</head>
+<body>
+<main id="view-paper"><header>
+<p class="brand">THOX.ai</p>
+<h1>Household first, community only as overflow</h1>
+<p class="muted">Research specification v0.4. 10 November 2026. Preprint. Not peer reviewed. Not a production authorization. Standalone reading copy.</p>
+<hr class="rule">
+<p>MeshStack subscribers may opt idle hardware into a private overflow for models that do not fit at home. The coordinator stores routing metadata. The prompt never enters the log. The log is a permissioned hash chain, and it is not on the token path.</p>
+<table class="meta"><tbody>
+<tr><th>Document</th><td>THOX-HTML-MESH-002, revision 0.4</td></tr>
+<tr><th>Authors</th><td>Craig Ross; Tommy Xaypanya. No synthetic author.</td></tr>
+<tr><th>Prepared for</th><td>Tommy Xaypanya, CTO; Craig Ross, CEO</td></tr>
+<tr><th>Classification</th><td>Internal research specification. No ship date, price, SLA, or certification.</td></tr>
+<tr><th>Platforms</th><td>ThoxOS, MeshStack, ThoxWork. ThoxBeam is a runtime extension, not a fourth platform.</td></tr>
+<tr><th>Code of record</th><td>ttracx/thox-meshstack-inference, decisions D10, D19, D22, D23, D24, D34, D35, D38. Reviewed 2026-11-10.</td></tr>
+<tr><th>Geometry</th><td class="mono">SHA-256 b4302c31c5d0b72435044638ad961409d7d4feeb354d3dadad4fd2777bf955e6</td></tr>
+</tbody></table>
+<p><button type="button" class="text" id="open-lab">Open the laboratory</button> <span class="muted">Numbers below are computed by the same planner the laboratory runs.</span></p>
+</header>
+<nav class="contents"><p class="mono green">Contents</p><ol>
+<li><a href="#s1">1. The file does not fit</a></li>
+<li><a href="#s2">2. The product decision</a></li>
+<li><a href="#s3">3. Decisions inherited, not re-litigated</a></li>
+<li><a href="#s4">4. The four-times KV error</a></li>
+<li><a href="#s5">5. Admission, worked in bytes</a></li>
+<li><a href="#s6">6. Where D23 and the printed rule disagree</a></li>
+<li><a href="#s7">7. Context sweep</a></li>
+<li><a href="#s8">8. Why a coin on the token path fails</a></li>
+<li><a href="#s9">9. Ledger, grants, credits</a></li>
+<li><a href="#s10">10. What the simulations show</a></li>
+<li><a href="#s11">11. Security requirements</a></li>
+<li><a href="#s12">12. Related work, narrowly</a></li>
+<li><a href="#s13">13. What this paper refuses to say</a></li>
+</ol></nav>
+<section id="abs"><h2>Abstract</h2>
+<p>A household MeshStack pools devices under one principal. The frozen file used by the v2 reference, Qwen3.6-27B-Q4_0, is 15,791,278,304 bytes. The 2/4/6 GB class floors advertise 12,884,901,888 bytes together. The weights exceed that aggregate before KV, workspace, or the reserve floor. This specification defines the overflow and nothing else: authenticated subscribers may place a frozen model on hardware other principals have opted in, under a grant bound to principal, lease epoch, and model fingerprint. Whole-request on hardware the subscriber already holds is preferred and spends zero community credits. Foreground work is excluded. Credits do not transfer.</p>
+<p>The audit record is a permissioned hash chain of metadata. It is not a cryptocurrency, not a consensus protocol, and not on the decode path. Under an assumed commit round trip of 40 ms, committing on every token or every hop of a 3-stage, 256-token loop adds 10.24 s or 20.48 s inside the loop. The specification adds 0 ms by construction. Revocation poisons the session locally. The block records the revocation after the fact.</p>
+<p>Decision D23 is the admission code of record. The inequality printed in the household report is a different predicate. On this geometry the two disagree at context 4096 for one 32 GB host, two 16 GB hosts, and two 32 GB hosts, and the disagreement widens at context 32768, where a 64 GB host that whole-requests at 4096 becomes unplaceable under D23 (3 layers left) while the printed cross-check still whole-requests it. The first stage of a three-host 16 GB pipeline at context 4096 is admitted with 8,902,528 bytes of slack. That is a packing result, not a performance result. No device measurement, no tokens per second, and no production community mesh are claimed.</p>
+</section>
+<section id="s1"><h2>1. The file does not fit</h2>
+<p>The problem is arithmetic. Usable RAM is 60 percent of advertised RAM, decision of record, not a measurement of a particular operating system. On the household floors the planner still seats a prefix and then stops. At context 4096 the 2/4/6 GB floors leave 43 layers unplaced under D23. An 8 GB endpoint alone leaves 49 layers. Sending the prompt to a hosted API would spend money per token and would leave the principal. This paper does not price that API. It asks whether idle memory the subscriber can already see, under a grant, can hold the layers the household cannot.</p>
+<p>Pipeline parallelism is the mesh form (D10, 2026-10-30). Tensor parallelism stays intra-node. A community spill is therefore a chain of contiguous layer spans, not a slice of one matrix across houses. One span on one node is whole-request and has zero activation hops. Every extra stage adds a hop on every token. The planner takes the longest span each admitted node can hold, largest usable RAM first, and stops when the layers are covered. Extra hosts that are not needed do not get a stage. At context 4096, four 16 GB hosts and six 16 GB hosts both plan as three stages, because three already cover the model.</p>
+</section>
+<section id="s2"><h2>2. The product decision</h2>
+<p>Overflow does not replace the products. The order is fixed.</p>
+<ol>
+<li>If one node the principal holds can whole-request the frozen model, run it there. Community spend is zero.</li>
+<li>If that node is in the foreground, it is out of the pool for that interval. Owner work wins.</li>
+<li>If the model is unplaceable at home, a grant may reserve opted-in hosts. The reservation is one credit per stage, and one credit is one usable GiB-hour. That is a stated constant, not a price and not a coin.</li>
+<li>If the planner returns unplaceable, there is no placement block. The session does not start on a partial model.</li>
+<li>A small endpoint keeps the grant and the prompt. It does not grow into a datacenter, and it does not call a public API to hide the miss.</li>
+</ol>
+<p>On the frozen model at context 4096 an idle 128 GB key, the stated product capacity and not a fresh measurement of bytes left after the operating system, whole-requests every layer at 0 community milli-credits and earns 76.8 credits in an idle hour. That hour covers 25 three-stage spills. The same key held at owner priority drops out, and three 16 GB desks pipeline the model at 3 credits. An 8 GB endpoint cannot do this alone. The desks can. A grant of 8 credits covers 2 such spills and leaves 2.</p>
+</section>
+<section id="s3"><h2>3. Decisions inherited, not re-litigated</h2>
+<p>Community overflow does not get its own planner. It calls the planner of record and then refuses to put the receipt on the hot path. The following entries in DECISIONS.md of ttracx/thox-meshstack-inference are constraints on this specification. Dates are the decision dates. This paper does not amend them.</p>
+<div class="scroll"><table><thead><tr><th>Decision</th><th>What it forces here</th></tr></thead><tbody>
+<tr><td class="mono">D10</td><td>Pipeline across nodes. Tensor parallelism stays inside one node. Expert parallelism is not widened.</td></tr><tr><td class="mono">D19</td><td>Cache advertisements are positive evidence, short-lived, and principal-keyed. An unkeyed KV inventory is a side channel and is rejected.</td></tr><tr><td class="mono">D22</td><td>Per-token KV is counted only on full-attention layers. The other layers are fixed recurrent state. On this preset that correction is exactly 4×.</td></tr><tr><td class="mono">D23</td><td>Weights, KV, recurrent state, and the runtime-reserve floor admit against usable RAM. Host workspace admits against a separate system budget. The domains are not summed.</td></tr><tr><td class="mono">D24</td><td>A ggml RPC worker’s resident footprint is the full model, not its split share, at the fleet commit reviewed on 2026-10-30. RPC is restricted to nodes with at least 16 GiB and carries no small-node memory claim. The honest layer split is the stage-server path. This laboratory’s arithmetic assumes that path. It does not license an RPC deployment on an 8 GB endpoint.</td></tr><tr><td class="mono">D34</td><td>Stages forward residuals to each other. The coordinator is not a hop. Decode at the edge is not treated as bandwidth-bound; the derived residual is hidden × 4 bytes.</td></tr><tr><td class="mono">D35</td><td>A late output from a revoked session is rejected by epoch. Suspicion is not fencing. This specification poisons the local epoch before the revocation block is audited.</td></tr><tr><td class="mono">D38</td><td>Direct stage-to-stage forwarding is the serving transport. Any hop failure fails the session closed. Recovery is close and re-open, not migration. No rate is claimed.</td></tr>
+</tbody></table></div>
+<p class="muted">D22 and D23 were decided 2026-10-30 by Sadie Weaving, Chief Agentic Officer, under the founders’ decision policy. Hard gates (spend, public release, store submission, production defaults) stay with the founders. A synthetic agent is not an author of those decisions and is not an author of this paper.</p>
+</section>
+<section id="s4"><h2>4. The four-times KV error</h2>
+<p>Before D22 the preset counted KV on all 64 layers. The verified geometry has 16 full-attention layers, 4 KV heads, head dimension 256, fp16. Correct bytes per token are 2 × 16 × 4 × 256 × 2 = 65,536. The old formula is 262,144, a factor of 4. At context 4096 that is 0.250 GiB versus 1.000 GiB. The missing recurrent state, 48 layers × 128 × 6144 × 4, is 150,994,944 bytes (0.141 GiB). D22 records that figure as an fp32 estimate from GGUF metadata, not a measured llama.cpp buffer. This paper does not promote it to a measurement.</p>
+<p>The activation that crosses a stage boundary, if carried as fp32 at the hidden size 5120, is 20,480 bytes per token. D34 cites that derivation (about 20,480 bytes) and concludes that decode is not the bandwidth problem; prefill chunks and KV movement are. We adopt the byte count as calculated. We do not adopt a throughput.</p>
+</section>
+<section id="s5"><h2>5. Admission, worked in bytes</h2>
+<p>For a node with advertised memory M and a contiguous layer span, the code of record is:</p>
+<pre>U     = floor(0.6 · M)
+ρ     = ceil(0.25 · U)
+R     = W(span) + K(span) + C(span) + max(0, ρ − K(span))
+S     = layers(span) · hidden · context · 4
+admit iff R ≤ U and S ≤ U_sys
+U_sys defaults to U when no separate system RAM is declared</pre>
+<p>W, K, and C use the cumulative floor split from the v2 planner, so adjacent spans do not drop or double a byte of the frozen file. Candidates must be alive, opted in, thermally accepted, and not in owner-foreground state. The printed household statement was W(s) + K(s)·T ≤ R(n) and WS(s) ≤ Σ(n), domains not summed, and it did not put this reserve floor inside R. Section 6 keeps both predicates. D23 decides whether a block may exist.</p>
+<p>Three opted-in 16 GB hosts, context 4096. Usable RAM on each host is 10,307,921,510 bytes (9.600 GiB). The binary search seats 31, 31, and 2 layers. The first stage clears the usable-RAM test by 8,902,528 bytes. One more layer on that host fails. The third host is almost empty because the model has already been covered, not because the planner is balancing load. There is no load-balance claim.</p>
+<div class="scroll"><table><thead><tr><th>Stage</th><th>Layers</th><th>Weights</th><th>KV</th><th>Recurrent</th><th>Reserve</th><th>Required</th><th>Slack</th><th>Workspace</th></tr></thead><tbody><tr><td class="mono">desk0</td><td class="mono">0–30</td><td class="mono">7,648,900,428</td><td class="mono">130,023,424</td><td class="mono">73,138,176</td><td class="mono">2,446,956,954</td><td class="mono">10,299,018,982</td><td class="mono">8,902,528</td><td class="mono">2,600,468,480</td></tr><tr><td class="mono">desk1</td><td class="mono">31–61</td><td class="mono">7,648,900,429</td><td class="mono">130,023,424</td><td class="mono">73,138,176</td><td class="mono">2,446,956,954</td><td class="mono">10,299,018,983</td><td class="mono">8,902,527</td><td class="mono">2,600,468,480</td></tr><tr><td class="mono">desk2</td><td class="mono">62–63</td><td class="mono">493,477,447</td><td class="mono">8,388,608</td><td class="mono">4,718,592</td><td class="mono">2,568,591,770</td><td class="mono">3,075,176,417</td><td class="mono">7,232,745,093</td><td class="mono">167,772,160</td></tr></tbody></table></div>
+<p class="muted">Table 1. CALCULATED. Frozen Qwen3.6-27B-Q4_0, three 16 GB hosts, context 4096, rule D23. Workspace is the separate domain (2.422 GiB on the first stage against 9.600 GiB). All three stages fit both domains. Mode: pipeline. Printed-rule cross-check on the same nodes: pipeline.</p>
+</section>
+<section id="s6"><h2>6. Where D23 and the printed rule disagree</h2>
+<p>The cross-check implements the household sentence literally: stage weights plus recurrent state must fit usable RAM, and stage KV must fit usable RAM, separately, with no 25 percent reserve floor, and workspace does not gate it. It is not the code of record. Publishing only the D23 column would let a later reader substitute the looser predicate and still think they were quoting this paper.</p>
+<div class="scroll"><table><thead><tr><th>Scenario, context 4096</th><th>D23</th><th>Printed cross-check</th><th>Stages seated by D23</th></tr></thead><tbody><tr class=""><td>Household floors 2/4/6 GB</td><td>unplaceable, 43 left</td><td>unplaceable, 34 left</td><td class="mono">thoxair 0–10; thoxkey 11–17; thoxmini 18–20</td></tr><tr class=""><td>Household floors, context 8192</td><td>unplaceable, 43 left</td><td>unplaceable, 34 left</td><td class="mono">thoxair 0–10; thoxkey 11–17; thoxmini 18–20</td></tr><tr class=""><td>One 16 GB contributor</td><td>unplaceable, 33 left</td><td>unplaceable, 23 left</td><td class="mono">n16 0–30</td></tr><tr class="band"><td>One 32 GB contributor</td><td>unplaceable, 2 left</td><td>whole-request</td><td class="mono">n32 0–61</td></tr><tr class=""><td>One 64 GB contributor</td><td>whole-request</td><td>whole-request</td><td class="mono">n64 0–63</td></tr><tr class="band"><td>Two 16 GB contributors</td><td>unplaceable, 2 left</td><td>pipeline</td><td class="mono">a0 0–30; a1 31–61</td></tr><tr class="band"><td>Two 32 GB contributors</td><td>pipeline</td><td>whole-request</td><td class="mono">b0 0–61; b1 62–63</td></tr><tr class=""><td>Three 16 GB contributors</td><td>pipeline</td><td>pipeline</td><td class="mono">d0 0–30; d1 31–61; d2 62–63</td></tr><tr class=""><td>Community pool (8×4, 16×4, 32×2, 64×1)</td><td>whole-request</td><td>whole-request</td><td class="mono">c11 0–63</td></tr><tr class="band"><td>Community pool without the 64 GB host</td><td>pipeline</td><td>whole-request</td><td class="mono">c10 0–61; c9 62–63</td></tr><tr class=""><td>Six 16 GB contributors only</td><td>pipeline</td><td>pipeline</td><td class="mono">s16-0 0–30; s16-1 31–61; s16-2 62–63</td></tr><tr class="band"><td>64 GB host held at owner priority P0</td><td>pipeline</td><td>whole-request</td><td class="mono">c10 0–61; c9 62–63</td></tr></tbody></table></div>
+<p class="muted">Table 2. CALCULATED. Highlighted rows are predicates that do not agree. A highlighted cross-check that says whole-request is not permission to skip the reserve floor.</p>
+<p>The practical disagreements at context 4096 are these. One 32 GB host is unplaceable under D23, two layers left, and the cross-check whole-requests it. Two 16 GB hosts are unplaceable under D23, two layers left, and the cross-check pipelines them. Two 32 GB hosts pipeline under D23 and whole-request under the cross-check, because the reserve floor stops the first host from taking every layer. Using the printed inequality as if it were D23 would admit sessions the v2 planner refuses.</p>
+</section>
+<section id="s7"><h2>7. Context sweep</h2>
+<p>KV grows with context. The reserve floor does not. A host that whole-requests at 4096 can fail at 32768 without any change in weights. The sweep below is the same planner at six context lengths and eleven class-floor topologies. Illustrative 8B/32B/70B classes are omitted here; they are not weighed files. They are in the laboratory evidence download, labelled illustrative.</p>
+<div class="scroll"><table><thead><tr><th>Context</th><th>Topology</th><th>D23</th><th>Cross-check</th></tr></thead><tbody><tr class="band"><td class="mono">1024</td><td>One 32 GB</td><td class="mono">unplaceable:2</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">1024</td><td>Two 16 GB</td><td class="mono">unplaceable:2</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">1024</td><td>Two 32 GB</td><td class="mono">pipeline</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">2048</td><td>One 32 GB</td><td class="mono">unplaceable:2</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">2048</td><td>Two 16 GB</td><td class="mono">unplaceable:2</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">2048</td><td>Two 32 GB</td><td class="mono">pipeline</td><td class="mono">whole-request</td></tr><tr class=""><td class="mono">4096</td><td>Household 2/4/6 GB</td><td class="mono">unplaceable:43</td><td class="mono">unplaceable:34</td></tr><tr class=""><td class="mono">4096</td><td>One 8 GB</td><td class="mono">unplaceable:49</td><td class="mono">unplaceable:44</td></tr><tr class=""><td class="mono">4096</td><td>One 16 GB</td><td class="mono">unplaceable:33</td><td class="mono">unplaceable:23</td></tr><tr class="band"><td class="mono">4096</td><td>One 32 GB</td><td class="mono">unplaceable:2</td><td class="mono">whole-request</td></tr><tr class=""><td class="mono">4096</td><td>One 64 GB</td><td class="mono">whole-request</td><td class="mono">whole-request</td></tr><tr class=""><td class="mono">4096</td><td>One 128 GB</td><td class="mono">whole-request</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">4096</td><td>Two 16 GB</td><td class="mono">unplaceable:2</td><td class="mono">pipeline</td></tr><tr class=""><td class="mono">4096</td><td>Three 16 GB</td><td class="mono">pipeline</td><td class="mono">pipeline</td></tr><tr class=""><td class="mono">4096</td><td>Four 16 GB</td><td class="mono">pipeline</td><td class="mono">pipeline</td></tr><tr class=""><td class="mono">4096</td><td>Six 16 GB</td><td class="mono">pipeline</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">4096</td><td>Two 32 GB</td><td class="mono">pipeline</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">8192</td><td>One 32 GB</td><td class="mono">unplaceable:2</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">8192</td><td>Two 16 GB</td><td class="mono">unplaceable:2</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">8192</td><td>Two 32 GB</td><td class="mono">pipeline</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">16384</td><td>One 32 GB</td><td class="mono">unplaceable:3</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">16384</td><td>Two 16 GB</td><td class="mono">unplaceable:4</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">16384</td><td>Two 32 GB</td><td class="mono">pipeline</td><td class="mono">whole-request</td></tr><tr class=""><td class="mono">32768</td><td>Household 2/4/6 GB</td><td class="mono">unplaceable:55</td><td class="mono">unplaceable:34</td></tr><tr class=""><td class="mono">32768</td><td>One 8 GB</td><td class="mono">unplaceable:57</td><td class="mono">unplaceable:44</td></tr><tr class=""><td class="mono">32768</td><td>One 16 GB</td><td class="mono">unplaceable:49</td><td class="mono">unplaceable:23</td></tr><tr class="band"><td class="mono">32768</td><td>One 32 GB</td><td class="mono">unplaceable:34</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">32768</td><td>One 64 GB</td><td class="mono">unplaceable:3</td><td class="mono">whole-request</td></tr><tr class=""><td class="mono">32768</td><td>One 128 GB</td><td class="mono">whole-request</td><td class="mono">whole-request</td></tr><tr class="band"><td class="mono">32768</td><td>Two 16 GB</td><td class="mono">unplaceable:34</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">32768</td><td>Three 16 GB</td><td class="mono">unplaceable:19</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">32768</td><td>Four 16 GB</td><td class="mono">unplaceable:4</td><td class="mono">pipeline</td></tr><tr class=""><td class="mono">32768</td><td>Six 16 GB</td><td class="mono">pipeline</td><td class="mono">pipeline</td></tr><tr class="band"><td class="mono">32768</td><td>Two 32 GB</td><td class="mono">unplaceable:4</td><td class="mono">whole-request</td></tr></tbody></table></div>
+<p class="muted">Table 3. CALCULATED. Rows shown are every disagreement, plus the full 4096 and 32768 slices so the non-disagreements stay visible. 21 cells disagree across the six contexts. The laboratory bench recomputes any pool the reader builds; this table is the frozen-model sweep only.</p>
+<p>At context 32768 the result that matters for the product story is the 64 GB host. D23 leaves 3 layers unplaced. The printed cross-check still says whole-request. A page that only quoted “64 GB holds the 27B” would be true at 4096 and false at 32768 under the planner we actually ship. Three 16 GB hosts, which pipeline cleanly at 4096, leave 19 layers at 32768. Four 16 GB hosts still leave 4. The overflow is not a promise that any context length fits if enough neighbors are online.</p>
+</section>
+<section id="s8"><h2>8. Why a coin on the token path fails</h2>
+<p>A hash chain can record who reserved memory. It cannot be a precondition of the next token. Let N be generated tokens, H the number of activation hops, R an assumed commit round trip. H = max(0, stages − 1). Added delay inside the token loop is 0 if settlement is off the path, N·R if every token waits for a commit, and N·H·R if every hop waits for a commit. For the fixture N = 256, stages = 3, H = 2, R = 40 ms, those rejected designs add 10,240 ms and 20,480 ms. The specification adds 0 ms. R is not a measured round trip on a THOX link. Changing R changes only the rejected column.</p>
+<p>Settlement may batch. The fixture batches every 64 tokens, which is 4 batches in a 256-token run, and the batch lags by one assumed round trip beside the loop. Auditors recompute the chain later. That work is not time-to-token. Certificate Transparency (RFC 6962) is the pattern for an asynchronous audit log. It is not implemented here. There is no gossip, no mempool, no gas, and no Byzantine quorum. The sequencer is the coordinator. It can omit a metadata block. Recomputing hashes detects a rewrite of a block that is still present. It does not detect the omission.</p>
+<figure><figcaption>Figure 1. Two rails. The dashed step is not awaited.</figcaption>
+<div class="grid2">
+<ol>
+<li>1. Session open compares the cached epoch. No block read.</li>
+<li class="band">2. Token loop. Residual goes stage to stage. 20,480 bytes per token per boundary if fp32.</li>
+<li>3. Enqueue settlement. The loop does not wait.</li>
+</ol>
+<div class="card">Ledger rail, beside the loop: enroll, advertise, earn, endow, reserve, placement, grant, settle, revoke. Logical time is the block index. There is no wall clock in the hash. A revoked epoch is poisoned locally before this rail appends the revoke.</div>
+</div></figure>
+</section>
+<section id="s9"><h2>9. Ledger, grants, credits</h2>
+<p>The laboratory chain is SHA-256 of the previous hash and a canonical JSON body. Legal types are genesis, enroll, advertise, earn, endow, reserve, placement, grant, settle, and revoke. A transfer type is defined only so it can be rejected. Field names prompt, prompts, activation, activations, kv, weights, payload, plaintext, tokens, and embedding are rejected before append. Credits are non-transferable. A reservation id cannot be spent twice. A repeated transaction id is a replay. After revoke, the epoch increments and a settlement carrying the old epoch is refused.</p>
+<p>The fixture on the three-stage plan appends 16 blocks, the chain verifies, a one-field tamper of block 1 fails the hash at index 1, and payload bytes committed are 0. Subscriber remainder after the 3-credit reservation against an 8-credit endowment is 5 credits. Those balances are milli-credits in the ledger state (8000 endowed, 3000 reserved, 5000 left, epoch 2, revoked). Replay, double-spend, credit transfer, a prompt field, and a late settlement are refused and do not become blocks. The grant drill passes.</p>
+<p>A grant carries principal, epoch, scope, fingerprint, and parent. Consumption walks the parents. A cycle, a dead ancestor, a stale epoch, a different principal, or a different fingerprint is a rejection. Revocation clears the live bit of the root and of its children. That bit is the laboratory stand-in for deleting key material. The chain stores the revocation, not the key. The drill accepts one live KV grant and rejects the four bad presentations plus both descendants after the shred. It is a protocol drill. It is not a penetration test and not the production secrets graph.</p>
+<p>One credit equals one usable GiB-hour offered. 1 MeshCredit per usable GiB-hour offered. Stated constant, not a fitted price. The community-pool sketch offers 134.4 usable GiB and therefore 134.4 credits in one hour. That identity does not set a dollar price, a market, or a payout.</p>
+</section>
+<section id="s10"><h2>10. What the simulations show</h2>
+<p>Churn is an independent Bernoulli leave of each opted-in contributor, seed 20261110, 200 trials. It does not model latency, partial stage failure, or bandwidth. On the full pool at leave probability 0.2, 200 of 200 place, of which 159 are whole-request and 41 are pipelines. Histogram {"1":159,"2":38,"3":3}. The 64 GB host is why whole-request dominates: when it stays up, it takes the model.</p>
+<p>Remove that host and the same seed places 200 of 200, whole-request 0, pipeline 200. Histogram {"2":188,"3":12}. Six 16 GB hosts at leave probability 0.35 place 182, pipeline 182, and the rest are unplaceable. Histogram {"3":182,"unplaceable":18}. A pool that only looks reliable because one large host is usually present is not a reliability result. The laboratory exposes the leave probability so that reading can be repeated rather than quoted.</p>
+<p>Illustrative dense classes on the same community pool, parameters times a Q4 factor, not weighed GGUF files: illustrative-8B-q4 on community pool → whole-request (1 stages); illustrative-32B-q4 on community pool → whole-request (1 stages); illustrative-70B-q4 on community pool → pipeline (2 stages). These rows are not evidence that an 8B, 32B, or 70B file has been placed on THOX hardware.</p>
+</section>
+<section id="s11"><h2>11. Security requirements</h2>
+<p>The threat model is narrow. Contributors are honest-but-curious and may return with a stale lease. A subscriber may replay, double-spend, transfer credits, or try to write a prompt into a block. The coordinator is honest-but-curious about metadata and is never given the payload. There is no attestation and no enclave. Execution confidentiality is not claimed. Petals states the reason in its own paper: peers who serve the first layers can recover input tokens. A subscriber who places the first stage on someone else’s machine has shown that machine the activations. The grant does not undo that. The honest mitigation in this design is to keep the first stage at home when the first stage fits, and to say so when it does not.</p>
+<div class="scroll"><table><thead><tr><th>Requirement</th><th>Status in this specification</th></tr></thead><tbody>
+<tr><td>Typed records. No pickle. No class name taken from the message.</td><td>Required. Not fuzz-tested here.</td></tr>
+<tr><td>Authenticate the peer before decode.</td><td>Required. The CVE below is what happens when this is skipped.</td></tr>
+<tr><td>Walk the grant before a stage accepts a residual.</td><td>Specified. Laboratory drill only.</td></tr>
+<tr><td>Reject payload field names before the block is hashed.</td><td>Implemented in the laboratory ledger. Fixture payload bytes: 0.</td></tr>
+<tr><td>Poison the epoch locally, then append the revoke.</td><td>Specified. The loop does not wait for the block.</td></tr>
+<tr><td>Coordinator record is metadata: capacity, block id, token count, load.</td><td>Required. D19 forbids an unkeyed cache inventory.</td></tr>
+<tr><td>Credits do not transfer.</td><td>Implemented. The transfer type is a reject.</td></tr>
+<tr><td>Hash chain detects rewrite, not omission.</td><td>Stated as a limit, not a feature.</td></tr>
+<tr><td>First-stage host sees activations.</td><td>Disclosed. Not solved.</td></tr>
+<tr><td>Timing side channels.</td><td>Unexamined.</td></tr>
+</tbody></table></div>
+<p>CVE-2026-105192, disclosed 7 October 2026 by Yuval Moravchick of JFrog, CVSS 3.1 base 9.8. LMCache multiprocess mode opened an unauthenticated ZeroMQ ROUTER. Extension code on that socket reached pickle.loads while the server was still decoding arguments, before the handler. Affected releases are 0.3.9 through 0.5.5. The 0.5.6 fix, published 14 October 2026, replaces pickle with versioned typed MessagePack, validates the descriptor first, and chooses the wrapper from a fixed local allowlist. The default bind is localhost; a routable bind is what makes the bug a network bug. The lesson we adopt is the shape of the fix. We do not claim our laboratory was penetration-tested, and we do not claim a THOX process was vulnerable to this CVE.</p>
+</section>
+<section id="s12"><h2>12. Related work, narrowly</h2>
+<p>Household report, Ross and Xaypanya, technical report v1.1.0. The public HTML states byte-split zstd of real GGUF KV at 1.17×–1.20×, bit-exact, encode 422–935 MB/s on a CPU host class; parent-chained HMAC-SHA256 at 9.7 µs per 64-token chunk; a live lease drill with zero stale authorisations and zero stale completions. It also states one two-host llama.cpp split of Qwen2.5-3B Q4_K_M over SSH-tunnelled ggml-rpc at 2.3 tokens per second, with the transport caveats of that report. MEASURED there. Not re-run here. D24 is why that RPC number is not a template for small community nodes: the RPC worker holds the full model. The HTML page cites concept DOI 10.5281/zenodo.23919579 and says the v1.1.0 version DOI is pending. The repository citation file records 10.5281/zenodo.23969070. Both statements are left standing.</p>
+<div class="scroll"><table><thead><tr><th>Source</th><th>What it actually reports</th><th>What it does not license</th></tr></thead><tbody>
+<tr><td>Petals, Borzunov et al., ACL 2023, pp. 558–568</td><td>Collaborative inference of BLOOM-176B on consumer GPUs, about one step per second in the abstract. The paper’s real-world table is their measurement, not ours. They also warn that first-layer peers can recover input tokens.</td><td>Any THOX rate. A public swarm. Execution confidentiality.</td></tr>
+<tr><td>LMCache, Liu, Cheng, Yao, An, Chen, Feng, Huang, Shen, Zhang, Du, and Jiang, arXiv:2510.09665, 2025</td><td>KV cache moved out of GPU memory and shared across engines. The abstract reports up to 15× throughput with vLLM on that paper’s workloads.</td><td>A household or community result. We do not import a latency multiplier from this paper. Datacenter fabric is not a mesh hop.</td></tr>
+<tr><td>CacheBlend, Yao et al., arXiv:2405.16444</td><td>Prefill reuse against full KV recompute in a serving stack. Their speedups are theirs.</td><td>Cross-principal KV reuse. Unadmitted here. KV is a cache, not a memory of the user.</td></tr>
+<tr><td>DICOMPUTE, Kakkad, Khekade, Chinchawale, Mestry, and Mohammadkhani, arXiv:2611.10804, 7 November 2026</td><td>A framework. It separates residency, transport confidentiality, execution confidentiality, and verifiable accounting, and it does not present a simulation as a measurement. Its conclusion matches the product order in section 2: distributed placement is the plausible case for divisible work; tightly coupled, memory-intensive inference still prefers one cluster.</td><td>Execution confidentiality. We adopt the separation and the caution. We do not adopt their cost model as a THOX price.</td></tr>
+</tbody></table></div>
+</section>
+<section id="s13"><h2>13. What this paper refuses to say</h2>
+<div class="scroll"><table><thead><tr><th>Sentence</th><th>Allowed?</th></tr></thead><tbody>
+<tr><td>The 27B Q4_0 file is larger than 2+4+6 GiB of advertised RAM.</td><td>Yes. Calculated.</td></tr>
+<tr><td>D23 and the printed household inequality disagree, and D23 wins.</td><td>Yes. Both columns are in section 6.</td></tr>
+<tr><td>At context 32768 a 64 GB class host is not a D23 whole-request.</td><td>Yes. Calculated. Not a device test.</td></tr>
+<tr><td>The ledger adds 0 ms inside the token loop.</td><td>Yes, as a specification. Not as a benchmark.</td></tr>
+<tr><td>An idle 128 GB key earns 76.8 credits an hour.</td><td>Yes, under the stated constant. Not a price.</td></tr>
+<tr><td>Community mesh ships, or has an SLA, or costs $X.</td><td>No.</td></tr>
+<tr><td>15×, one step per second, or 2.3 tokens per second is a THOX community result.</td><td>No. External, or one household run of a different model.</td></tr>
+<tr><td>The hash chain prevents a dishonest coordinator from omitting a block.</td><td>No. It detects rewriting of blocks that remain.</td></tr>
+<tr><td>Contributors cannot see the prompt.</td><td>No. The first stage sees activations. The log does not.</td></tr>
+<tr><td>RPC on an 8 GB node holds only its layer share.</td><td>No. D24. The stage path is the one this arithmetic assumes.</td></tr>
+</tbody></table></div>
+<p>No device was under test. A public rate would need a named device, a frozen file hash, a context length, cold and warm time to first token, a decode rate with the number of runs and the coefficient of variation, and energy if a battery claim is made. That protocol has not been run for community overflow. Class floors are not a bill of materials. There is no freedom-to-operate analysis in this document.</p>
+</section>
+<section id="end"><h2>Conclusion</h2>
+<p>The household already fails closed when the model does not fit, and it already keeps the coordinator off the payload. Community overflow is other principals’ idle memory, under a grant, with a receipt that cannot see the prompt and cannot sit on the token. The planner that decides whether the receipt may exist is D23, including where it is stricter than the inequality printed in the household report, and including where a longer context removes a whole-request that a short context allowed. The latency cost of the receipt, inside the token loop, is zero by construction. Making that zero true on named devices is future measurement. Until then the claim is the architecture, the calculated placements, and the refusals.</p>
+</section>
+<section id="refs"><h2>References</h2>
+<ol>
+<li>Ross and Xaypanya, THOX MeshStack household report v1.1.0, 2026. Concept DOI 10.5281/zenodo.23919579. Repository citation records 10.5281/zenodo.23969070. Public HTML marks the version DOI pending.</li>
+<li>ttracx/thox-meshstack-inference, DECISIONS.md, D10–D38 as cited. Tree reviewed 10 November 2026.</li>
+<li>Borzunov, Baranchuk, Dettmers, Ryabinin, Belkada, Chumachenko, Samygin, and Raffel, Petals, ACL 2023, pp. 558–568. DOI 10.18653/v1/2023.acl-demo.54. arXiv:2209.01188.</li>
+<li>Liu, Cheng, Yao, An, Chen, Feng, Huang, Shen, Zhang, Du, and Jiang, LMCache, arXiv:2510.09665, submitted 8 October 2025.</li>
+<li>Yao et al., CacheBlend, arXiv:2405.16444.</li>
+<li>Kakkad, Khekade, Chinchawale, Mestry, and Mohammadkhani, DICOMPUTE, arXiv:2611.10804, 7 November 2026.</li>
+<li>Laurie, Langley, and Kasper, Certificate Transparency, RFC 6962, 2013.</li>
+<li>Moravchick, JFrog Security Research, CVE-2026-105192, disclosed 7 October 2026. Fixed in LMCache 0.5.6.</li>
+</ol>
+</section>
+<section id="repro"><h2>Reproducibility and assistance</h2>
+<p>Every calculated cell on this page was produced by the planner embedded in this file. Geometry fingerprint b4302c31c5d0b72435044638ad961409d7d4feeb354d3dadad4fd2777bf955e6. Churn seed 20261110. Weight bytes 15,791,278,304. KV bytes per token 65,536. The laboratory on the other view runs that same source. No new measurement file is attached. An arXiv identifier does not exist, so there is nothing to index on Hugging Face.</p>
+<p>Synthetic agents assisted with literature search, repository review, and drafting. They are not authors. The decision to keep D23 where it disagrees with the printed household inequality, and to keep the ledger off the token path, remains with Craig Ross and Tommy Xaypanya.</p>
+</section>
+<footer>Your AI. Your Data. Your Rules.</footer></main>
+<main id="view-lab" hidden></main>
+<script>/**
+ * [js-sha256]{@link https://github.com/emn178/js-sha256}
+ *
+ * @version 1.0.0
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
+ * @copyright Chen, Yi-Cyuan 2014-2026
+ * @license MIT
+ */
+!function(t,h){"object"==typeof exports&&"undefined"!=typeof module?module.exports=h():"function"==typeof define&&define.amd?define(h):(t="undefined"!=typeof globalThis?globalThis:t||self).sha256=h()}(this,function(){"use strict";var t="undefined"!=typeof ArrayBuffer,h=function(h){if("string"===typeof h)return[h,!0];if(Array.isArray(h))return[h,!1];if(t&&h){if(h.constructor===ArrayBuffer)return[new Uint8Array(h),!1];if(ArrayBuffer.isView(h))return[h,!1]}throw new Error("input is invalid type")},i="0123456789abcdef".split(""),s=[-2147483648,8388608,32768,128],e=[24,16,8,0],r=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],n=["hex","array","digest","arrayBuffer"],o=[],a=function(t,h){return function(i){return new c(h,!0).update(i)[t]()}},f=function(t){var h=a("hex",t);h.create=function(){return new c(t)},h.update=function(t){return h.create().update(t)};for(var i=0;i<n.length;++i){var s=n[i];h[s]=a(s,t)}return h},u=function(t,h){return function(i,s){return new y(i,h,!0).update(s)[t]()}},l=function(t){var h=u("hex",t);h.create=function(h){return new y(h,t)},h.update=function(t,i){return h.create(t).update(i)};for(var i=0;i<n.length;++i){var s=n[i];h[s]=u(s,t)}return h};function c(t,h){h?(o[0]=o[16]=o[1]=o[2]=o[3]=o[4]=o[5]=o[6]=o[7]=o[8]=o[9]=o[10]=o[11]=o[12]=o[13]=o[14]=o[15]=0,this.blocks=o):this.blocks=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],t?(this.h0=3238371032,this.h1=914150663,this.h2=812702999,this.h3=4144912697,this.h4=4290775857,this.h5=1750603025,this.h6=1694076839,this.h7=3204075428):(this.h0=1779033703,this.h1=3144134277,this.h2=1013904242,this.h3=2773480762,this.h4=1359893119,this.h5=2600822924,this.h6=528734635,this.h7=1541459225),this.block=this.start=this.bytes=this.hBytes=0,this.finalized=this.hashed=!1,this.first=!0,this.is224=t}function y(t,i,s){var e,r=h(t);if(t=r[0],r[1]){var n,o=[],a=t.length,f=0;for(e=0;e<a;++e)(n=t.charCodeAt(e))<128?o[f++]=n:n<2048?(o[f++]=192|n>>>6,o[f++]=128|63&n):n<55296||n>=57344?(o[f++]=224|n>>>12,o[f++]=128|n>>>6&63,o[f++]=128|63&n):(n=65536+((1023&n)<<10|1023&t.charCodeAt(++e)),o[f++]=240|n>>>18,o[f++]=128|n>>>12&63,o[f++]=128|n>>>6&63,o[f++]=128|63&n);t=o}t.length>64&&(t=new c(i,!0).update(t).array());var u=[],l=[];for(e=0;e<64;++e){var y=t[e]||0;u[e]=92^y,l[e]=54^y}c.call(this,i,s),this.update(l),this.oKeyPad=u,this.inner=!0,this.sharedMemory=s}c.prototype.update=function(t){if(this.finalized)throw new Error("finalize already called");var i=h(t);t=i[0];for(var s,r,n=i[1],o=0,a=t.length,f=this.blocks;o<a;){if(this.hashed&&(this.hashed=!1,f[0]=this.block,this.block=f[16]=f[1]=f[2]=f[3]=f[4]=f[5]=f[6]=f[7]=f[8]=f[9]=f[10]=f[11]=f[12]=f[13]=f[14]=f[15]=0),n)for(r=this.start;o<a&&r<64;++o)(s=t.charCodeAt(o))<128?f[r>>>2]|=s<<e[3&r++]:s<2048?(f[r>>>2]|=(192|s>>>6)<<e[3&r++],f[r>>>2]|=(128|63&s)<<e[3&r++]):s<55296||s>=57344?(f[r>>>2]|=(224|s>>>12)<<e[3&r++],f[r>>>2]|=(128|s>>>6&63)<<e[3&r++],f[r>>>2]|=(128|63&s)<<e[3&r++]):(s=65536+((1023&s)<<10|1023&t.charCodeAt(++o)),f[r>>>2]|=(240|s>>>18)<<e[3&r++],f[r>>>2]|=(128|s>>>12&63)<<e[3&r++],f[r>>>2]|=(128|s>>>6&63)<<e[3&r++],f[r>>>2]|=(128|63&s)<<e[3&r++]);else for(r=this.start;o<a&&r<64;++o)f[r>>>2]|=t[o]<<e[3&r++];this.lastByteIndex=r,this.bytes+=r-this.start,r>=64?(this.block=f[16],this.start=r-64,this.hash(),this.hashed=!0):this.start=r}return this.bytes>4294967295&&(this.hBytes+=this.bytes/4294967296|0,this.bytes=this.bytes%4294967296),this},c.prototype.finalize=function(){if(!this.finalized){this.finalized=!0;var t=this.blocks,h=this.lastByteIndex;t[16]=this.block,t[h>>>2]|=s[3&h],this.block=t[16],h>=56&&(this.hashed||this.hash(),t[0]=this.block,t[16]=t[1]=t[2]=t[3]=t[4]=t[5]=t[6]=t[7]=t[8]=t[9]=t[10]=t[11]=t[12]=t[13]=t[14]=t[15]=0),t[14]=this.hBytes<<3|this.bytes>>>29,t[15]=this.bytes<<3,this.hash()}},c.prototype.hash=function(){var t,h,i,s,e,n,o,a,f,u=this.h0,l=this.h1,c=this.h2,y=this.h3,p=this.h4,d=this.h5,b=this.h6,v=this.h7,w=this.blocks;for(t=16;t<64;++t)h=((e=w[t-15])>>>7|e<<25)^(e>>>18|e<<14)^e>>>3,i=((e=w[t-2])>>>17|e<<15)^(e>>>19|e<<13)^e>>>10,w[t]=w[t-16]+h+w[t-7]+i|0;for(f=l&c,t=0;t<64;t+=4)this.first?(this.is224?(n=300032,v=(e=w[0]-1413257819)-150054599|0,y=e+24177077|0):(n=704751109,v=(e=w[0]-210244248)-1521486534|0,y=e+143694565|0),this.first=!1):(h=(u>>>2|u<<30)^(u>>>13|u<<19)^(u>>>22|u<<10),s=(n=u&l)^u&c^f,v=y+(e=v+(i=(p>>>6|p<<26)^(p>>>11|p<<21)^(p>>>25|p<<7))+(p&d^~p&b)+r[t]+w[t])|0,y=e+(h+s)|0),h=(y>>>2|y<<30)^(y>>>13|y<<19)^(y>>>22|y<<10),s=(o=y&u)^y&l^n,b=c+(e=b+(i=(v>>>6|v<<26)^(v>>>11|v<<21)^(v>>>25|v<<7))+(v&p^~v&d)+r[t+1]+w[t+1])|0,h=((c=e+(h+s)|0)>>>2|c<<30)^(c>>>13|c<<19)^(c>>>22|c<<10),s=(a=c&y)^c&u^o,d=l+(e=d+(i=(b>>>6|b<<26)^(b>>>11|b<<21)^(b>>>25|b<<7))+(b&v^~b&p)+r[t+2]+w[t+2])|0,h=((l=e+(h+s)|0)>>>2|l<<30)^(l>>>13|l<<19)^(l>>>22|l<<10),s=(f=l&c)^l&y^a,p=u+(e=p+(i=(d>>>6|d<<26)^(d>>>11|d<<21)^(d>>>25|d<<7))+(d&b^~d&v)+r[t+3]+w[t+3])|0,u=e+(h+s)|0,this.chromeBugWorkAround=!0;this.h0=this.h0+u|0,this.h1=this.h1+l|0,this.h2=this.h2+c|0,this.h3=this.h3+y|0,this.h4=this.h4+p|0,this.h5=this.h5+d|0,this.h6=this.h6+b|0,this.h7=this.h7+v|0},c.prototype.hex=function(){this.finalize();var t=this.h0,h=this.h1,s=this.h2,e=this.h3,r=this.h4,n=this.h5,o=this.h6,a=this.h7,f=i[t>>>28&15]+i[t>>>24&15]+i[t>>>20&15]+i[t>>>16&15]+i[t>>>12&15]+i[t>>>8&15]+i[t>>>4&15]+i[15&t]+i[h>>>28&15]+i[h>>>24&15]+i[h>>>20&15]+i[h>>>16&15]+i[h>>>12&15]+i[h>>>8&15]+i[h>>>4&15]+i[15&h]+i[s>>>28&15]+i[s>>>24&15]+i[s>>>20&15]+i[s>>>16&15]+i[s>>>12&15]+i[s>>>8&15]+i[s>>>4&15]+i[15&s]+i[e>>>28&15]+i[e>>>24&15]+i[e>>>20&15]+i[e>>>16&15]+i[e>>>12&15]+i[e>>>8&15]+i[e>>>4&15]+i[15&e]+i[r>>>28&15]+i[r>>>24&15]+i[r>>>20&15]+i[r>>>16&15]+i[r>>>12&15]+i[r>>>8&15]+i[r>>>4&15]+i[15&r]+i[n>>>28&15]+i[n>>>24&15]+i[n>>>20&15]+i[n>>>16&15]+i[n>>>12&15]+i[n>>>8&15]+i[n>>>4&15]+i[15&n]+i[o>>>28&15]+i[o>>>24&15]+i[o>>>20&15]+i[o>>>16&15]+i[o>>>12&15]+i[o>>>8&15]+i[o>>>4&15]+i[15&o];return this.is224||(f+=i[a>>>28&15]+i[a>>>24&15]+i[a>>>20&15]+i[a>>>16&15]+i[a>>>12&15]+i[a>>>8&15]+i[a>>>4&15]+i[15&a]),f},c.prototype.toString=c.prototype.hex,c.prototype.digest=function(){this.finalize();var t=this.h0,h=this.h1,i=this.h2,s=this.h3,e=this.h4,r=this.h5,n=this.h6,o=this.h7,a=[t>>>24&255,t>>>16&255,t>>>8&255,255&t,h>>>24&255,h>>>16&255,h>>>8&255,255&h,i>>>24&255,i>>>16&255,i>>>8&255,255&i,s>>>24&255,s>>>16&255,s>>>8&255,255&s,e>>>24&255,e>>>16&255,e>>>8&255,255&e,r>>>24&255,r>>>16&255,r>>>8&255,255&r,n>>>24&255,n>>>16&255,n>>>8&255,255&n];return this.is224||a.push(o>>>24&255,o>>>16&255,o>>>8&255,255&o),a},c.prototype.array=c.prototype.digest,c.prototype.arrayBuffer=function(){this.finalize();var t=new ArrayBuffer(this.is224?28:32),h=new DataView(t);return h.setUint32(0,this.h0),h.setUint32(4,this.h1),h.setUint32(8,this.h2),h.setUint32(12,this.h3),h.setUint32(16,this.h4),h.setUint32(20,this.h5),h.setUint32(24,this.h6),this.is224||h.setUint32(28,this.h7),t},y.prototype=new c,y.prototype.finalize=function(){if(c.prototype.finalize.call(this),this.inner){this.inner=!1;var t=this.array();c.call(this,this.is224,this.sharedMemory),this.update(this.oKeyPad),this.update(t),c.prototype.finalize.call(this)}};var p=f(),d=f(!0);p.sha256=p,p.sha224=d,p.hmac=l(),d.hmac=l(!0);const b="object"==typeof globalThis?globalThis:"object"==typeof self?self:"object"==typeof window?window:"object"==typeof global?global:void 0;return b&&(b.sha224=d),p});
+
+// @ts-nocheck
+/**
+ * Community MeshStack laboratory arithmetic.
+ *
+ * Implements the v2 reference admission rule (decisions D22 and D23 in
+ * ttracx/thox-meshstack-inference, reviewed 2026-11-10): weights, per-token
+ * KV, fixed recurrent state, and a runtime-reserve floor admit together
+ * against usable RAM; host workspace admits against a separate system budget.
+ * The domains are never summed. Usable budgets are 60% of advertised RAM
+ * (P4 RAM_BUDGET_FRACTION).
+ *
+ * This module establishes no device measurement and no community-mesh
+ * measurement. Outputs are CALCULATED or SIMULATED.
+ */
+
+
+const RAM_BUDGET_FRACTION = 0.6;
+const RESERVE_FRACTION = 0.25;
+const GIB = 1024 ** 3;
+
+/** Frozen Qwen3.6-27B-Q4_0 geometry from the v2 model preset. Weight bytes are the published on-disk size. */
+const QWEN36_FIELDS = {
+  name: "Qwen3.6-27B-Q4_0",
+  paramsB: 27.78,
+  layers: 64,
+  hidden: 5120,
+  kvHeads: 4,
+  headDim: 256,
+  quant: "q4_0",
+  attentionLayers: 16,
+  ssmStateBytesPerLayer: 128 * 6144 * 4,
+  weightBytesOverride: 15_791_278_304,
+  illustrative: false,
+  source:
+    "v2 preset qwen36_27b(): unsloth/Qwen3.6-27B-GGUF Q4_0 on-disk bytes; 16 of 64 layers full attention; SSM state is an fp32 arithmetic estimate from GGUF metadata, not a measured buffer.",
+};
+
+const DTYPE_BYTES = { fp16: 2, bf16: 2, q8_0: 1, q4_k: 0.5625, q4_0: 0.5625, fp8: 1 };
+
+function canonicalJson(obj) {
+  const parts = Object.keys(obj)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}: ${typeof obj[k] === "string" ? JSON.stringify(obj[k]) : String(obj[k])}`);
+  return `{${parts.join(", ")}}`;
+}
+
+function gib(bytes) {
+  return bytes / GIB;
+}
+
+function usableBytes(ramGb) {
+  return Math.trunc(ramGb * GIB * RAM_BUDGET_FRACTION);
+}
+
+function makeModel(fields, context) {
+  const attention =
+    fields.attentionLayers == null ? fields.layers : fields.attentionLayers;
+  const weightBytes =
+    fields.weightBytesOverride != null
+      ? fields.weightBytesOverride
+      : Math.trunc(fields.paramsB * 1e9 * DTYPE_BYTES[fields.quant]);
+  const recurrent = (fields.layers - attention) * (fields.ssmStateBytesPerLayer || 0);
+  const kvPerToken = 2 * attention * fields.kvHeads * fields.headDim * 2;
+  const blob = {
+    head_dim: fields.headDim,
+    hidden: fields.hidden,
+    kv_heads: fields.kvHeads,
+    layers: fields.layers,
+    name: fields.name,
+    params_b: fields.paramsB,
+    quant: fields.quant,
+  };
+  if (fields.attentionLayers != null) blob.attention_layers = fields.attentionLayers;
+  if (fields.ssmStateBytesPerLayer) blob.ssm_state_bytes_per_layer = fields.ssmStateBytesPerLayer;
+  if (fields.weightBytesOverride != null) blob.weight_bytes_override = fields.weightBytesOverride;
+  const canonical = canonicalJson(blob);
+  return {
+    ...fields,
+    context,
+    attention,
+    weightBytes,
+    recurrent,
+    kvPerToken,
+    kvTotal: kvPerToken * context,
+    fingerprint: sha256(canonical),
+    canonical,
+  };
+}
+
+function qwen36(context = 4096) {
+  return makeModel(QWEN36_FIELDS, context);
+}
+
+/** Illustrative dense classes. Bytes are params × Q4 factor, not a weighed file. */
+function illustrative(name, paramsB, layers, hidden, kvHeads, headDim, context) {
+  return makeModel(
+    {
+      name,
+      paramsB,
+      layers,
+      hidden,
+      kvHeads,
+      headDim,
+      quant: "q4_k",
+      attentionLayers: null,
+      ssmStateBytesPerLayer: 0,
+      weightBytesOverride: null,
+      illustrative: true,
+      source: "ILLUSTRATIVE class geometry. Not a measured GGUF and not a THOX model card.",
+    },
+    context,
+  );
+}
+
+function makeNode(spec) {
+  const system = spec.systemRamGb || 0;
+  return {
+    id: spec.id,
+    role: spec.role,
+    principal: spec.principal,
+    kind: spec.kind || "host",
+    ramGb: spec.ramGb,
+    alive: spec.alive !== false,
+    offers: spec.offers !== false,
+    foreground: !!spec.foreground,
+    thermalOk: spec.thermalOk !== false,
+    usableRam: usableBytes(spec.ramGb),
+    usableSystem: usableBytes(system || spec.ramGb),
+  };
+}
+
+function stageAccounting(model, node, start, end, kvFraction, runtimeWorkspace, headroomBytes) {
+  const weight = Math.floor((model.weightBytes * end) / model.layers) - Math.floor((model.weightBytes * start) / model.layers);
+  const kv = Math.floor((model.kvTotal * end) / model.layers) - Math.floor((model.kvTotal * start) / model.layers);
+  const recurrent =
+    Math.floor((model.recurrent * end) / model.layers) - Math.floor((model.recurrent * start) / model.layers);
+  const reserveFloor = Math.ceil(node.usableRam * kvFraction);
+  const headroom = Math.max(headroomBytes, reserveFloor - kv - runtimeWorkspace);
+  const workspace = (end - start) * model.hidden * model.context * 4;
+  const required = weight + kv + runtimeWorkspace + headroom + recurrent;
+  return {
+    nodeId: node.id,
+    role: node.role,
+    principal: node.principal,
+    ramGb: node.ramGb,
+    start,
+    end,
+    layers: end - start,
+    weight,
+    kv,
+    recurrent,
+    headroom,
+    workspace,
+    required,
+    usableRam: node.usableRam,
+    usableSystem: node.usableSystem,
+    ramFit: required <= node.usableRam,
+    workspaceFit: workspace <= node.usableSystem,
+  };
+}
+
+function fitsD23(stage) {
+  return stage.ramFit && stage.workspaceFit;
+}
+
+function candidates(nodes) {
+  return nodes
+    .filter((n) => n.alive && n.offers && n.thermalOk && !n.foreground)
+    .slice()
+    .sort((a, b) => b.usableRam - a.usableRam || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
+/**
+ * Greedy contiguous pack, largest usable RAM first. Fail closed.
+ * Returns { ok, reason, shards, mode } .
+ */
+function planShards(model, nodes, opts = {}) {
+  const kvFraction = opts.kvFraction ?? RESERVE_FRACTION;
+  const runtimeWorkspace = opts.runtimeWorkspace ?? 0;
+  const headroomBytes = opts.headroomBytes ?? 0;
+  const pool = candidates(nodes);
+  const shards = [];
+  let layer = 0;
+  for (const node of pool) {
+    if (layer >= model.layers) break;
+    let low = layer + 1;
+    let high = model.layers;
+    let selected = null;
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      const candidate = stageAccounting(model, node, layer, middle, kvFraction, runtimeWorkspace, headroomBytes);
+      if (fitsD23(candidate)) {
+        selected = candidate;
+        low = middle + 1;
+      } else {
+        high = middle - 1;
+      }
+    }
+    if (!selected) continue;
+    shards.push(selected);
+    layer = selected.end;
+  }
+  if (layer < model.layers) {
+    return {
+      ok: false,
+      rule: "D23",
+      reason: `${model.layers - layer} layers unplaced`,
+      unplaced: model.layers - layer,
+      shards,
+      mode: "unplaceable",
+    };
+  }
+  return {
+    ok: true,
+    rule: "D23",
+    reason: "admitted",
+    unplaced: 0,
+    shards,
+    mode: shards.length === 1 ? "whole-request" : "pipeline",
+  };
+}
+
+/**
+ * Cross-check shaped like the household report's non-summed statement:
+ * stage weights (plus recurrent state) must fit usable RAM, AND stage KV
+ * must fit usable RAM, separately. No 25% reserve floor. Workspace is
+ * reported but does not gate this cross-check. Not the code of record.
+ */
+function planNonsummed(model, nodes) {
+  const pool = candidates(nodes);
+  const shards = [];
+  let layer = 0;
+  for (const node of pool) {
+    if (layer >= model.layers) break;
+    let low = layer + 1;
+    let high = model.layers;
+    let selected = null;
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      const s = stageAccounting(model, node, layer, middle, 0, 0, 0);
+      const weightSide = s.weight + s.recurrent <= node.usableRam;
+      const kvSide = s.kv <= node.usableRam;
+      if (weightSide && kvSide) {
+        selected = s;
+        low = middle + 1;
+      } else high = middle - 1;
+    }
+    if (!selected) continue;
+    shards.push(selected);
+    layer = selected.end;
+  }
+  if (layer < model.layers) {
+    return { ok: false, rule: "v1.1-nonsummed-crosscheck", unplaced: model.layers - layer, shards, mode: "unplaceable" };
+  }
+  return {
+    ok: true,
+    rule: "v1.1-nonsummed-crosscheck",
+    unplaced: 0,
+    shards,
+    mode: shards.length === 1 ? "whole-request" : "pipeline",
+  };
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function rand() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Seeded contributor churn. SIMULATED. Does not model WAN latency. */
+function simulateChurn(model, nodes, { trials = 200, p = 0.2, seed = 20261110 } = {}) {
+  const rand = mulberry32(seed);
+  let placed = 0;
+  let whole = 0;
+  let pipeline = 0;
+  const hist = {};
+  for (let i = 0; i < trials; i++) {
+    const shocked = nodes.map((n) => {
+      if (n.role !== "contributor" || !n.offers) return n;
+      return rand() < p ? { ...n, alive: false } : n;
+    });
+    const plan = planShards(model, shocked);
+    const key = plan.ok ? String(plan.shards.length) : "unplaceable";
+    hist[key] = (hist[key] || 0) + 1;
+    if (plan.ok) {
+      placed += 1;
+      if (plan.mode === "whole-request") whole += 1;
+      else pipeline += 1;
+    }
+  }
+  return {
+    label: "SIMULATED",
+    trials,
+    leaveProbability: p,
+    seed,
+    placed,
+    placeableFraction: placed / trials,
+    wholeRequest: whole,
+    pipeline,
+    histogram: hist,
+    note: "Independent Bernoulli leave per contributor per trial. No latency, no partial stage failure, no measured bandwidth.",
+  };
+}
+
+function householdFloorNodes() {
+  return [
+    makeNode({ id: "thoxmini", role: "owner", principal: "household", kind: "thoxmini", ramGb: 2, offers: true }),
+    makeNode({ id: "thoxkey", role: "owner", principal: "household", kind: "thoxkey", ramGb: 4, offers: true }),
+    makeNode({ id: "thoxair", role: "owner", principal: "household", kind: "thoxair", ramGb: 6, offers: true }),
+  ];
+}
+
+function communityPoolNodes() {
+  const nodes = [];
+  const layout = [
+    ["c1", 8], ["c2", 8], ["c3", 8], ["c4", 8],
+    ["c5", 16], ["c6", 16], ["c7", 16], ["c8", 16],
+    ["c9", 32], ["c10", 32], ["c11", 64],
+  ];
+  for (const [id, ram] of layout) {
+    nodes.push(makeNode({ id, role: "contributor", principal: `owner-${id}`, kind: "opt-in-host", ramGb: ram, offers: true }));
+  }
+  nodes.push(makeNode({ id: "sub-a", role: "subscriber", principal: "subscriber-a", kind: "thoxkey", ramGb: 8, offers: false }));
+  nodes.push(makeNode({ id: "sub-b", role: "subscriber", principal: "subscriber-b", kind: "host", ramGb: 16, offers: false }));
+  return nodes;
+}
+
+function singleNode(ramGb, id = `n${ramGb}`) {
+  return [makeNode({ id, role: "contributor", principal: "solo", kind: "host", ramGb, offers: true })];
+}
+
+function summarize(model, nodes, plan) {
+  return {
+    model: model.name,
+    illustrative: !!model.illustrative,
+    context: model.context,
+    weightBytes: model.weightBytes,
+    kvPerToken: model.kvPerToken,
+    kvTotal: model.kvTotal,
+    recurrent: model.recurrent,
+    fingerprint: model.fingerprint,
+    nodes: nodes.filter((n) => n.offers && n.alive).map((n) => ({ id: n.id, ramGb: n.ramGb, usableRam: n.usableRam })),
+    plan: {
+      ok: plan.ok,
+      rule: plan.rule,
+      mode: plan.mode,
+      unplaced: plan.unplaced,
+      stages: plan.shards.map((s) => ({
+        nodeId: s.nodeId,
+        ramGb: s.ramGb,
+        layers: `${s.start}–${s.end - 1}`,
+        layerCount: s.layers,
+        weightBytes: s.weight,
+        kvBytes: s.kv,
+        recurrentBytes: s.recurrent,
+        reserveBytes: s.headroom,
+        requiredBytes: s.required,
+        workspaceBytes: s.workspace,
+        ramFit: s.ramFit,
+        workspaceFit: s.workspaceFit,
+      })),
+    },
+  };
+}
+
+function placementRow(model, nodes) {
+  const d23 = planShards(model, nodes);
+  const cross = planNonsummed(model, nodes);
+  return {
+    label: "CALCULATED",
+    d23: summarize(model, nodes, d23),
+    nonsummed: {
+      ok: cross.ok,
+      mode: cross.mode,
+      unplaced: cross.unplaced,
+      stages: cross.shards.length,
+    },
+  };
+}
+
+/** Deterministic privacy drill. SIMULATED protocol, not a security proof. */
+function grantDrill(modelFingerprint) {
+  const checks = [];
+  const log = [];
+  function check(id, ok, detail) {
+    checks.push({ id, ok, detail });
+  }
+  const root = {
+    id: "g-root",
+    principal: "subscriber-a",
+    epoch: 7,
+    scope: "community",
+    modelFp: modelFingerprint,
+    parent: null,
+    kind: "root",
+    live: true,
+  };
+  const kv = { id: "g-kv", principal: "subscriber-a", epoch: 7, scope: "kv-transfer", modelFp: modelFingerprint, parent: "g-root", kind: "attenuated", live: true };
+  const stage = { id: "g-stage", principal: "subscriber-a", epoch: 7, scope: "stage-exec", modelFp: modelFingerprint, parent: "g-root", kind: "attenuated", live: true };
+  const grants = { "g-root": root, "g-kv": kv, "g-stage": stage };
+
+  function consume(grantId, principal, epoch, fp) {
+    const g = grants[grantId];
+    if (!g || !g.live) return "reject:shredded-or-missing";
+    let cursor = g;
+    const seen = new Set();
+    while (cursor) {
+      if (seen.has(cursor.id)) return "reject:cycle";
+      seen.add(cursor.id);
+      if (!cursor.live) return "reject:ancestor-dead";
+      if (cursor.epoch !== epoch) return "reject:stale-epoch";
+      cursor = cursor.parent ? grants[cursor.parent] : null;
+    }
+    if (principal !== g.principal) return "reject:cross-principal";
+    if (fp !== g.modelFp) return "reject:fingerprint";
+    return "accept";
+  }
+
+  check("live-kv", consume("g-kv", "subscriber-a", 7, modelFingerprint) === "accept", "matching principal, epoch, and fingerprint");
+  check("stale-epoch", consume("g-kv", "subscriber-a", 6, modelFingerprint) === "reject:stale-epoch", "epoch 6 against lease 7");
+  check("cross-principal", consume("g-stage", "subscriber-b", 7, modelFingerprint) === "reject:cross-principal", "subscriber-b presenting subscriber-a's grant");
+  check("fingerprint", consume("g-kv", "subscriber-a", 7, "0".repeat(64)) === "reject:fingerprint", "mismatched model fingerprint");
+
+  // Crypto-shred: revocation deletes descendants. Key material is the live bit.
+  for (const g of Object.values(grants)) {
+    if (g.id === "g-root" || g.parent === "g-root") g.live = false;
+  }
+  check("shred-kv", consume("g-kv", "subscriber-a", 7, modelFingerprint) === "reject:shredded-or-missing", "root revocation shreds the KV descendant");
+  check("shred-stage", consume("g-stage", "subscriber-a", 7, modelFingerprint) === "reject:shredded-or-missing", "root revocation shreds the stage descendant");
+
+  log.push({ channel: "coordinator", fields: ["capacity_gib", "block_id", "token_count", "load"], payloadBytes: 0 });
+  check("coordinator-metadata-only", log.every((e) => e.payloadBytes === 0 && !("prompt" in e)), "coordinator record has no payload bytes and no prompt field");
+
+  return {
+    label: "SIMULATED",
+    pass: checks.every((c) => c.ok),
+    checks,
+    note: "Protocol drill of fail-closed grant rules. Not an implementation of the production secrets graph and not a penetration test.",
+  };
+}
+
+const CREDIT_PER_GIB_HOUR = 1;
+const MILLI_PER_STAGE = 1000;
+
+/** Definitional accounting identity. Not a market and not a measured price. */
+function creditSketch(nodes, hours = 1) {
+  const offered = nodes
+    .filter((n) => n.role === "contributor" && n.offers && n.alive)
+    .reduce((s, n) => s + n.ramGb * RAM_BUDGET_FRACTION, 0);
+  return {
+    label: "CALCULATED",
+    definition: "1 MeshCredit per usable GiB-hour offered. Stated constant, not a fitted price.",
+    hours,
+    usableGibOffered: offered,
+    credits: offered * hours * CREDIT_PER_GIB_HOUR,
+    ownerPriority: "P0 foreground excludes a node from community admission for that interval.",
+  };
+}
+
+function briefPlan(plan) {
+  return {
+    ok: plan.ok,
+    mode: plan.mode,
+    unplaced: plan.unplaced,
+    stageCount: plan.shards.length,
+    stages: plan.shards.map((s) => ({
+      nodeId: s.nodeId,
+      ramGb: s.ramGb,
+      layers: `${s.start}–${s.end - 1}`,
+    })),
+  };
+}
+
+/**
+ * Product recommendation, calculated on the frozen model.
+ * Home whole-request spends nothing on the community.
+ * A spill reserves MILLI_PER_STAGE per stage. Idle hardware earns the same unit back.
+ * RAM figures for the key are the stated 128 GB product capacity. Other rows are class floors, not SKUs.
+ */
+function freedomPaths(context = 4096) {
+  const model = qwen36(context);
+  const key = makeNode({
+    id: "thoxkey",
+    role: "contributor",
+    principal: "owner-key",
+    kind: "thoxkey",
+    ramGb: 128,
+    offers: true,
+  });
+  const keyBusy = makeNode({
+    id: "thoxkey",
+    role: "contributor",
+    principal: "owner-key",
+    kind: "thoxkey",
+    ramGb: 128,
+    offers: true,
+    foreground: true,
+  });
+  const desks = [0, 1, 2].map((i) =>
+    makeNode({
+      id: `desk-${i}`,
+      role: "contributor",
+      principal: `neighbor-${i}`,
+      kind: "opt-in-host",
+      ramGb: 16,
+      offers: true,
+    }),
+  );
+  const alone8 = planShards(model, [
+    makeNode({ id: "endpoint", role: "contributor", principal: "owner-small", kind: "endpoint", ramGb: 8, offers: true }),
+  ]);
+  const onKey = planShards(model, [key]);
+  const spill = planShards(model, desks);
+  const busy = planShards(model, [keyBusy, ...desks]);
+  const earnKey = Math.round(128 * RAM_BUDGET_FRACTION * MILLI_PER_STAGE);
+  const spillMilli = spill.ok ? spill.shards.length * MILLI_PER_STAGE : 0;
+  return {
+    label: "CALCULATED",
+    model: model.name,
+    context,
+    milliPerStage: MILLI_PER_STAGE,
+    grantMilli: 8000,
+    sessionsPerGrant: spillMilli ? Math.floor(8000 / spillMilli) : 0,
+    grantRemainder: spillMilli ? 8000 % spillMilli : 8000,
+    sessionsPerIdleKeyHour: spillMilli ? Math.floor(earnKey / spillMilli) : 0,
+    rule: "A model that fits at home spends 0 community milli-credits. A spill reserves 1000 per stage. An idle node earns 1000 per usable GiB-hour. Stated constants, not a price and not a coin.",
+    paths: [
+      {
+        id: "key",
+        product: "ThoxKey",
+        ramLabel: "128 GB",
+        stance: "Run it on the key. Nothing leaves.",
+        plan: briefPlan(onKey),
+        communityMilli: 0,
+        earnMilliPerHour: earnKey,
+        enhances: "The key remains the private runtime. Idle, the same box funds the overflow for everyone else.",
+      },
+      {
+        id: "endpoint",
+        product: "Small endpoint",
+        ramLabel: "8 GB class",
+        stance: "It cannot hold the model. Neighbors can.",
+        alone: briefPlan(alone8),
+        plan: briefPlan(spill),
+        communityMilli: spillMilli,
+        earnMilliPerHour: 0,
+        enhances: "The endpoint keeps the grant and the prompt. It does not need a bigger box, and it does not call a public API.",
+      },
+      {
+        id: "busy",
+        product: "ThoxKey in use",
+        ramLabel: "128 GB, foreground",
+        stance: "Your work wins. The mesh is the overflow.",
+        plan: briefPlan(busy),
+        communityMilli: busy.ok ? busy.shards.length * MILLI_PER_STAGE : 0,
+        earnMilliPerHour: 0,
+        enhances: "Owner priority is unchanged. Community capacity does not replace the product you are holding.",
+      },
+    ],
+  };
+}
+
+function kvCorrection(context = 4096) {
+  const model = qwen36(context);
+  const allLayerKvPerToken = 2 * model.layers * model.kvHeads * model.headDim * 2;
+  return {
+    label: "CALCULATED",
+    context,
+    attentionLayers: model.attention,
+    layers: model.layers,
+    correctKvPerToken: model.kvPerToken,
+    allLayerKvPerToken,
+    overstatementFactor: allLayerKvPerToken / model.kvPerToken,
+    correctKvTotal: model.kvPerToken * context,
+    allLayerKvTotal: allLayerKvPerToken * context,
+    recurrentEstimate: model.recurrent,
+    activationBytesPerBoundary: model.hidden * 4,
+    weightBytes: model.weightBytes,
+    fingerprint: model.fingerprint,
+    note: "D22: per-token KV counts full-attention layers only. The all-layer figure is the pre-D22 overstatement (4× on this geometry). Recurrent state is an fp32 estimate, not a measured buffer. Activation bytes are hidden × 4, the fp32 residual D34 derives as ~20,480 B/token/boundary.",
+  };
+}
+
+function pair(ram, count, prefix) {
+  return Array.from({ length: count }, (_, i) =>
+    makeNode({ id: `${prefix}${i}`, role: "contributor", principal: `p-${prefix}${i}`, kind: "opt-in-host", ramGb: ram, offers: true }),
+  );
+}
+
+/** Context × topology admission. CALCULATED. Nodes are class floors, not a bill of materials. */
+function contextSweep(contexts = [1024, 2048, 4096, 8192, 16384, 32768]) {
+  const topologies = [
+    { title: "Household 2/4/6 GB", nodes: householdFloorNodes() },
+    { title: "One 8 GB", nodes: singleNode(8, "s8") },
+    { title: "One 16 GB", nodes: singleNode(16, "s16") },
+    { title: "One 32 GB", nodes: singleNode(32, "s32") },
+    { title: "One 64 GB", nodes: singleNode(64, "s64") },
+    { title: "One 128 GB", nodes: singleNode(128, "s128") },
+    { title: "Two 16 GB", nodes: pair(16, 2, "t16") },
+    { title: "Three 16 GB", nodes: pair(16, 3, "h16") },
+    { title: "Four 16 GB", nodes: pair(16, 4, "f16") },
+    { title: "Six 16 GB", nodes: pair(16, 6, "x16") },
+    { title: "Two 32 GB", nodes: pair(32, 2, "t32") },
+  ];
+  const cells = [];
+  for (const context of contexts) {
+    const model = qwen36(context);
+    for (const spec of topologies) {
+      const row = placementRow(model, spec.nodes);
+      cells.push({
+        context,
+        title: spec.title,
+        d23: row.d23.plan.ok ? row.d23.plan.mode : `unplaceable:${row.d23.plan.unplaced}`,
+        stages: row.d23.plan.stages.length,
+        cross: row.nonsummed.ok ? row.nonsummed.mode : `unplaceable:${row.nonsummed.unplaced}`,
+        disagree: (row.d23.plan.ok ? row.d23.plan.mode : "unplaceable") !== (row.nonsummed.ok ? row.nonsummed.mode : "unplaceable"),
+      });
+    }
+  }
+  return { label: "CALCULATED", model: "Qwen3.6-27B-Q4_0", contexts, topologies: topologies.map((t) => t.title), cells };
+}
+
+/** Byte-level accounting for the canonical three-host spill. CALCULATED. */
+function workedPipeline(context = 4096) {
+  const model = qwen36(context);
+  const nodes = pair(16, 3, "desk");
+  const plan = planShards(model, nodes);
+  const cross = planNonsummed(model, nodes);
+  return {
+    label: "CALCULATED",
+    context,
+    model: model.name,
+    fingerprint: model.fingerprint,
+    weightBytes: model.weightBytes,
+    kvPerToken: model.kvPerToken,
+    kvTotal: model.kvTotal,
+    recurrent: model.recurrent,
+    ok: plan.ok,
+    mode: plan.mode,
+    unplaced: plan.unplaced,
+    crossMode: cross.ok ? cross.mode : `unplaceable:${cross.unplaced}`,
+    stages: plan.shards.map((s) => ({
+      nodeId: s.nodeId,
+      ramGb: s.ramGb,
+      layers: `${s.start}–${s.end - 1}`,
+      layerCount: s.layers,
+      weight: s.weight,
+      kv: s.kv,
+      recurrent: s.recurrent,
+      reserve: s.headroom,
+      required: s.required,
+      usableRam: s.usableRam,
+      workspace: s.workspace,
+      usableSystem: s.usableSystem,
+      ramFit: s.ramFit,
+      workspaceFit: s.workspaceFit,
+      slack: s.usableRam - s.required,
+    })),
+  };
+}
+
+function buildEvidence(context = 4096) {
+  const frozen = qwen36(context);
+  const frozen8k = qwen36(8192);
+  const household = householdFloorNodes();
+  const community = communityPoolNodes();
+  const classes = [
+    { title: "Household floors 2/4/6 GB", nodes: household, model: frozen },
+    { title: "Household floors, context 8192", nodes: household, model: frozen8k },
+    { title: "One 16 GB contributor", nodes: singleNode(16), model: frozen },
+    { title: "One 32 GB contributor", nodes: singleNode(32), model: frozen },
+    { title: "One 64 GB contributor", nodes: singleNode(64), model: frozen },
+    { title: "Two 16 GB contributors", nodes: [16, 16].map((r, i) => makeNode({ id: `a${i}`, role: "contributor", principal: `p${i}`, ramGb: r, offers: true })), model: frozen },
+    { title: "Two 32 GB contributors", nodes: [32, 32].map((r, i) => makeNode({ id: `b${i}`, role: "contributor", principal: `p${i}`, ramGb: r, offers: true })), model: frozen },
+    { title: "Three 16 GB contributors", nodes: [16, 16, 16].map((r, i) => makeNode({ id: `d${i}`, role: "contributor", principal: `p${i}`, ramGb: r, offers: true })), model: frozen },
+    { title: "Community pool (8×4, 16×4, 32×2, 64×1)", nodes: community, model: frozen },
+    { title: "Community pool without the 64 GB host", nodes: community.filter((n) => n.ramGb !== 64), model: frozen },
+    {
+      title: "Six 16 GB contributors only",
+      nodes: [0, 1, 2, 3, 4, 5].map((i) => makeNode({ id: `s16-${i}`, role: "contributor", principal: `p${i}`, ramGb: 16, offers: true })),
+      model: frozen,
+    },
+    {
+      title: "64 GB host held at owner priority P0",
+      nodes: community.map((n) => (n.ramGb === 64 ? { ...n, foreground: true } : n)),
+      model: frozen,
+    },
+  ];
+  const illustrativeRows = [8, 32, 70].map((b) => {
+    const geom = b === 8
+      ? illustrative("illustrative-8B-q4", 8, 32, 4096, 8, 128, context)
+      : b === 32
+        ? illustrative("illustrative-32B-q4", 32, 64, 5120, 8, 128, context)
+        : illustrative("illustrative-70B-q4", 70, 80, 8192, 8, 128, context);
+    return {
+      title: `${geom.name} on community pool`,
+      row: placementRow(geom, community),
+    };
+  });
+
+  const weightExceedsHousehold =
+    frozen.weightBytes > household.reduce((s, n) => s + n.ramGb * GIB, 0);
+
+  return {
+    generatedBy: "src/lib/lab/engine.mjs",
+    labels: {
+      measured: "Only figures cited from Ross & Xaypanya 2026, DOI 10.5281/zenodo.23969070, on stated host classes.",
+      calculated: "Admission arithmetic in this module.",
+      simulated: "Seeded churn and the grant-protocol drill.",
+    },
+    frozen: {
+      name: frozen.name,
+      weightBytes: frozen.weightBytes,
+      kvPerToken: frozen.kvPerToken,
+      recurrentEstimate: frozen.recurrent,
+      fingerprint: frozen.fingerprint,
+      context,
+    },
+    householdWeightExceedsAggregateAdvertised: weightExceedsHousehold,
+    householdAggregateBytes: household.reduce((s, n) => s + n.ramGb * GIB, 0),
+    rows: classes.map((c) => ({ title: c.title, ...placementRow(c.model, c.nodes) })),
+    illustrative: illustrativeRows,
+    churn: simulateChurn(frozen, community, { trials: 200, p: 0.2, seed: 20261110 }),
+    churnWithout64: simulateChurn(frozen, community.filter((n) => n.ramGb !== 64), { trials: 200, p: 0.2, seed: 20261110 }),
+    churn16Only: simulateChurn(
+      frozen,
+      [0, 1, 2, 3, 4, 5].map((i) => makeNode({ id: `s16-${i}`, role: "contributor", principal: `p${i}`, ramGb: 16, offers: true })),
+      { trials: 200, p: 0.35, seed: 20261110 },
+    ),
+    grants: grantDrill(frozen.fingerprint),
+    credits: creditSketch(community, 1),
+    measuredReuse: [
+      { label: "MEASURED", item: "Byte-split zstd on real GGUF KV, bit-exact", value: "1.17×–1.20×", host: "CPU host class", rate: "422–935 MB/s encode" },
+      { label: "MEASURED", item: "Parent-chained HMAC-SHA256", value: "9.7 µs per 64-token chunk", host: "host class in the household report" },
+      { label: "MEASURED", item: "Live lease-fencing drill", value: "0 stale authorisations accepted", host: "deployed coordinator" },
+    ],
+  };
+}
+
+function evidenceMarkdown(evidence) {
+  const lines = [];
+  lines.push("# Community MeshStack laboratory evidence");
+  lines.push("");
+  lines.push("Research specification only. No production community mesh is claimed. No THOX device measurement is claimed.");
+  lines.push("");
+  lines.push(`Generator: \`${evidence.generatedBy}\`. Context for the frozen model rows: ${evidence.frozen.context}.`);
+  lines.push("");
+  lines.push("## Frozen geometry");
+  lines.push("");
+  lines.push(`- Model: ${evidence.frozen.name}`);
+  lines.push(`- On-disk weight bytes: ${evidence.frozen.weightBytes}`);
+  lines.push(`- KV bytes/token (fp16, attention layers only): ${evidence.frozen.kvPerToken}`);
+  lines.push(`- Recurrent-state estimate (bytes, not measured): ${evidence.frozen.recurrentEstimate}`);
+  lines.push(`- Geometry fingerprint: \`${evidence.frozen.fingerprint}\``);
+  lines.push(`- Household 2+4+6 GiB aggregate bytes: ${evidence.householdAggregateBytes}`);
+  lines.push(`- Weights exceed that aggregate: ${evidence.householdWeightExceedsAggregateAdvertised}`);
+  lines.push("");
+  lines.push("## Placement (CALCULATED, rule D23)");
+  lines.push("");
+  lines.push("| Scenario | Result | Stages | Cross-check (non-summed) |");
+  lines.push("|---|---|---|---|");
+  for (const row of evidence.rows) {
+    const mode = row.d23.plan.ok ? row.d23.plan.mode : `unplaceable (${row.d23.plan.unplaced} layers)`;
+    const stages = row.d23.plan.stages.map((s) => `${s.nodeId} ${s.layers}`).join("; ") || "—";
+    const cross = row.nonsummed.ok ? `${row.nonsummed.mode} (${row.nonsummed.stages})` : `unplaceable (${row.nonsummed.unplaced})`;
+    lines.push(`| ${row.title} | ${mode} | ${stages} | ${cross} |`);
+  }
+  lines.push("");
+  lines.push("The non-summed column is a cross-check shaped like the household report's statement that weight and KV domains are not added. It is not the v2 code of record. Where the columns disagree, D23 is the stricter planner.");
+  lines.push("");
+  lines.push("## Illustrative classes on the community pool (CALCULATED, not weighed files)");
+  lines.push("");
+  for (const row of evidence.illustrative) {
+    const p = row.row.d23.plan;
+    lines.push(`- ${row.title}: ${p.ok ? p.mode : "unplaceable"}, ${p.stages.length} stage(s)`);
+  }
+  lines.push("");
+  lines.push("## Churn (SIMULATED)");
+  lines.push("");
+  const c = evidence.churn;
+  lines.push(`- Full pool, p=${c.leaveProbability}, n=${c.trials}, seed=${c.seed}: placed ${c.placed}, whole-request ${c.wholeRequest}, pipeline ${c.pipeline}. Histogram ${JSON.stringify(c.histogram)}.`);
+  const a = evidence.churnWithout64;
+  lines.push(`- Pool without 64 GB, p=${a.leaveProbability}, n=${a.trials}, seed=${a.seed}: placed ${a.placed}, whole-request ${a.wholeRequest}, pipeline ${a.pipeline}. Histogram ${JSON.stringify(a.histogram)}.`);
+  const b = evidence.churn16Only;
+  lines.push(`- Six 16 GB nodes, p=${b.leaveProbability}, n=${b.trials}, seed=${b.seed}: placed ${b.placed}, pipeline ${b.pipeline}. Histogram ${JSON.stringify(b.histogram)}.`);
+  lines.push("");
+  lines.push(c.note);
+  lines.push("");
+  lines.push("## Grant drill (SIMULATED)");
+  lines.push("");
+  lines.push(`Pass: ${evidence.grants.pass}.`);
+  for (const check of evidence.grants.checks) {
+    lines.push(`- ${check.ok ? "PASS" : "FAIL"} ${check.id}: ${check.detail}`);
+  }
+  lines.push("");
+  lines.push(evidence.grants.note);
+  lines.push("");
+  lines.push("## Credits (CALCULATED definition)");
+  lines.push("");
+  lines.push(`${evidence.credits.definition} Usable GiB offered: ${evidence.credits.usableGibOffered}. Credits for ${evidence.credits.hours} h: ${evidence.credits.credits}.`);
+  lines.push("");
+  lines.push("## Reused household measurements (MEASURED, not re-run here)");
+  lines.push("");
+  for (const m of evidence.measuredReuse) {
+    lines.push(`- ${m.item}: ${m.value} (${m.host})`);
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
+function isDirectRun() {
+  const argv = globalThis.process?.argv;
+  return Array.isArray(argv) && typeof argv[1] === "string" && argv[1].endsWith("engine.mjs");
+}
+
+if (isDirectRun()) {
+  const evidence = buildEvidence(4096);
+  const brief = {
+    fingerprint: evidence.frozen.fingerprint,
+    kvPerToken: evidence.frozen.kvPerToken,
+    weightExceeds: evidence.householdWeightExceedsAggregateAdvertised,
+    rows: evidence.rows.map((r) => ({
+      title: r.title,
+      d23: `${r.d23.plan.ok ? r.d23.plan.mode : "unplaceable"} (${r.d23.plan.unplaced} unplaced, ${r.d23.plan.stages.length} stages)`,
+      stages: r.d23.plan.stages.map((s) => `${s.nodeId}:${s.layers}`),
+      cross: `${r.nonsummed.ok ? r.nonsummed.mode : "unplaceable"} stages=${r.nonsummed.stages} unplaced=${r.nonsummed.unplaced}`,
+    })),
+    illustrative: evidence.illustrative.map((r) => ({
+      title: r.title,
+      mode: r.row.d23.plan.ok ? r.row.d23.plan.mode : "unplaceable",
+      stages: r.row.d23.plan.stages.length,
+    })),
+    churn: {
+      full: { placed: evidence.churn.placed, whole: evidence.churn.wholeRequest, pipeline: evidence.churn.pipeline, hist: evidence.churn.histogram },
+      no64: { placed: evidence.churnWithout64.placed, whole: evidence.churnWithout64.wholeRequest, pipeline: evidence.churnWithout64.pipeline, hist: evidence.churnWithout64.histogram },
+      sixteen: { placed: evidence.churn16Only.placed, whole: evidence.churn16Only.wholeRequest, pipeline: evidence.churn16Only.pipeline, hist: evidence.churn16Only.histogram, p: evidence.churn16Only.leaveProbability },
+    },
+    grantsPass: evidence.grants.pass,
+    credits: evidence.credits.credits,
+  };
+  console.log(JSON.stringify(brief, null, 2));
+}
+
+// @ts-nocheck
+/**
+ * Permissioned metadata ledger for the community-mesh laboratory.
+ *
+ * Blockchain-like properties that are in scope: append-only hash chain,
+ * replay rejection, non-transferable credit reservations, schema that
+ * refuses payloads, and tamper evidence.
+ *
+ * Properties that are out of scope, because they would sit on the token
+ * path: mining, a public mempool, gas, per-token commits, per-hop
+ * consensus, and BFT finality before the next activation.
+ *
+ * CALCULATED and SIMULATED only. No device measurement. No throughput claim.
+ */
+
+
+
+/** @param {Record<string, unknown>} obj */
+function canonicalJson(obj) {
+  const parts = Object.keys(obj)
+    .sort()
+    .map((k) => {
+      const v = obj[k];
+      const rendered =
+        typeof v === "string"
+          ? JSON.stringify(v)
+          : Array.isArray(v) || (v && typeof v === "object")
+            ? canonicalJson(/** @type {Record<string, unknown>} */ (v))
+            : String(v);
+      return `${JSON.stringify(k)}: ${rendered}`;
+    });
+  return `{${parts.join(", ")}}`;
+}
+
+const FORBIDDEN = new Set([
+  "prompt",
+  "prompts",
+  "activation",
+  "activations",
+  "kv",
+  "weights",
+  "payload",
+  "plaintext",
+  "tokens",
+  "embedding",
+]);
+
+/**
+ * @param {Record<string, unknown>} tx
+ */
+function schemaViolation(tx) {
+  for (const key of Object.keys(tx)) {
+    if (FORBIDDEN.has(key)) return key;
+  }
+  return null;
+}
+
+/**
+ * @param {string} prev
+ * @param {Record<string, unknown>} body
+ */
+function blockHash(prev, body) {
+  return sha256(`${prev}\n${canonicalJson(body)}`);
+}
+
+/**
+ * @typedef {{ index: number, prev: string, hash: string, tx: Record<string, unknown> }} Block
+ * @typedef {{ balances: Record<string, number>, reservations: Record<string, string>, seen: Record<string, boolean>, epoch: number, revoked: boolean, payloadBytes: number }} LedgerState
+ */
+
+function emptyState() {
+  return {
+    balances: /** @type {Record<string, number>} */ ({}),
+    reservations: /** @type {Record<string, string>} */ ({}),
+    seen: /** @type {Record<string, boolean>} */ ({}),
+    epoch: 1,
+    revoked: false,
+    payloadBytes: 0,
+  };
+}
+
+/**
+ * @param {LedgerState} state
+ * @param {Record<string, unknown>} tx
+ * @returns {{ ok: true, state: LedgerState } | { ok: false, reason: string }}
+ */
+function applyTx(state, tx) {
+  const forbidden = schemaViolation(tx);
+  if (forbidden) return { ok: false, reason: `reject:payload-field:${forbidden}` };
+  const id = typeof tx.txid === "string" ? tx.txid : "";
+  if (!id) return { ok: false, reason: "reject:missing-txid" };
+  if (state.seen[id]) return { ok: false, reason: "reject:replay" };
+  const type = tx.type;
+  /** @type {LedgerState} */
+  const next = {
+    balances: { ...state.balances },
+    reservations: { ...state.reservations },
+    seen: { ...state.seen, [id]: true },
+    epoch: state.epoch,
+    revoked: state.revoked,
+    payloadBytes: 0,
+  };
+  if (type === "genesis" || type === "enroll" || type === "advertise") {
+    return { ok: true, state: next };
+  }
+  if (type === "earn" || type === "endow") {
+    const who = String(tx.principal);
+    const amount = Number(tx.credits);
+    if (!Number.isInteger(amount) || amount <= 0) return { ok: false, reason: "reject:bad-amount" };
+    next.balances[who] = (next.balances[who] || 0) + amount;
+    return { ok: true, state: next };
+  }
+  if (type === "transfer") {
+    return { ok: false, reason: "reject:credits-non-transferable" };
+  }
+  if (type === "reserve") {
+    if (state.revoked || tx.epoch !== state.epoch) return { ok: false, reason: "reject:stale-epoch" };
+    const who = String(tx.principal);
+    const amount = Number(tx.credits);
+    const rid = String(tx.reservationId);
+    if (!Number.isInteger(amount) || amount <= 0) return { ok: false, reason: "reject:bad-amount" };
+    if (state.reservations[rid]) return { ok: false, reason: "reject:double-spend" };
+    if ((state.balances[who] || 0) < amount) return { ok: false, reason: "reject:insufficient-credits" };
+    next.balances[who] = (next.balances[who] || 0) - amount;
+    next.reservations[rid] = who;
+    return { ok: true, state: next };
+  }
+  if (type === "placement" || type === "grant" || type === "settle") {
+    if (state.revoked || tx.epoch !== state.epoch) return { ok: false, reason: "reject:stale-epoch" };
+    return { ok: true, state: next };
+  }
+  if (type === "revoke") {
+    next.revoked = true;
+    next.epoch = state.epoch + 1;
+    return { ok: true, state: next };
+  }
+  return { ok: false, reason: "reject:unknown-type" };
+}
+
+/**
+ * @param {Block[]} chain
+ * @param {LedgerState} state
+ * @param {Record<string, unknown>} tx
+ */
+function tryAppend(chain, state, tx) {
+  const applied = applyTx(state, tx);
+  if (!applied.ok) return { ok: false, reason: applied.reason, chain, state };
+  const prev = chain.length ? chain[chain.length - 1].hash : "genesis";
+  const body = { index: chain.length, prev, tx };
+  const hash = blockHash(prev, body);
+  /** @type {Block} */
+  const block = { index: chain.length, prev, hash, tx };
+  return { ok: true, reason: "appended", chain: chain.concat([block]), state: applied.state };
+}
+
+/**
+ * @param {Block[]} chain
+ */
+function verifyChain(chain) {
+  let prev = "genesis";
+  let state = emptyState();
+  for (let i = 0; i < chain.length; i++) {
+    const block = chain[i];
+    if (block.index !== i || block.prev !== prev) {
+      return { ok: false, at: i, reason: "reject:link", state };
+    }
+    const expect = blockHash(prev, { index: block.index, prev: block.prev, tx: block.tx });
+    if (expect !== block.hash) return { ok: false, at: i, reason: "reject:hash", state };
+    const applied = applyTx(state, block.tx);
+    if (!applied.ok) return { ok: false, at: i, reason: applied.reason, state };
+    state = applied.state;
+    prev = block.hash;
+  }
+  return { ok: true, at: chain.length, reason: "verified", state };
+}
+
+/**
+ * @param {Block[]} chain
+ */
+function tamperedCopy(chain) {
+  if (chain.length < 2) return chain;
+  return chain.map((block, index) => {
+    if (index !== 1) return block;
+    const tx = { ...block.tx, note: "tampered" };
+    return { ...block, tx };
+  });
+}
+
+/**
+ * Added delay on the token loop under three designs.
+ * RTT is an assumption supplied by the caller, not a measurement.
+ * Off-path settlement adds nothing inside the loop. The other two are
+ * rejected designs shown only as arithmetic.
+ * @param {{ tokens: number, stages: number, rttMs: number, batchTokens: number }} input
+ */
+function latencyModel(input) {
+  const tokens = input.tokens;
+  const stages = input.stages;
+  const rttMs = input.rttMs;
+  const batchTokens = input.batchTokens;
+  const hops = Math.max(0, stages - 1);
+  const perTokenCommitMs = tokens * rttMs;
+  const perHopCommitMs = tokens * hops * rttMs;
+  const batches = Math.max(1, Math.ceil(tokens / batchTokens));
+  return {
+    label: "CALCULATED",
+    tokens,
+    stages,
+    hops,
+    rttMs,
+    batchTokens,
+    batches,
+    offPathTokenLoopMs: 0,
+    perTokenCommitMs,
+    perHopCommitMs,
+    asyncSettlementLagMs: rttMs,
+    assumption:
+      "One commit costs one assumed round trip. The household mesh does not wait on that round trip. Absolute tokens per second are not claimed.",
+  };
+}
+
+function placementFixture() {
+  const model = qwen36(4096);
+  const nodes = [0, 1, 2].map((i) =>
+    makeNode({
+      id: `c${i}`,
+      role: "contributor",
+      principal: `owner-c${i}`,
+      kind: "opt-in-host",
+      ramGb: 16,
+      offers: true,
+    }),
+  );
+  const subscriber = makeNode({
+    id: "sub-a",
+    role: "subscriber",
+    principal: "subscriber-a",
+    kind: "thoxkey",
+    ramGb: 8,
+    offers: false,
+  });
+  const plan = planShards(model, nodes);
+  return { model, nodes, subscriber, plan };
+}
+
+/**
+ * Deterministic protocol. Logical time is the block index. No wall clock.
+ */
+function runProtocol() {
+  const { model, nodes, plan } = placementFixture();
+  /** @type {Block[]} */
+  let chain = [];
+  let state = emptyState();
+  /** @type {{ ok: boolean, reason: string, tx: Record<string, unknown> }[]} */
+  const rejected = [];
+
+  /**
+   * @param {Record<string, unknown>} tx
+   */
+  function push(tx) {
+    const result = tryAppend(chain, state, tx);
+    if (!result.ok) {
+      rejected.push({ ok: false, reason: result.reason, tx });
+      return result;
+    }
+    chain = result.chain;
+    state = result.state;
+    return result;
+  }
+
+  push({ type: "genesis", txid: "tx-genesis", scope: "community-mesh-lab" });
+  for (const node of nodes) {
+    push({ type: "enroll", txid: `tx-enroll-${node.id}`, principal: node.principal, nodeId: node.id, ramGb: node.ramGb });
+    const credits = Math.round(node.ramGb * 0.6 * 1000);
+    push({
+      type: "advertise",
+      txid: `tx-adv-${node.id}`,
+      principal: node.principal,
+      nodeId: node.id,
+      usableMilliGib: credits,
+    });
+    push({ type: "earn", txid: `tx-earn-${node.id}`, principal: node.principal, credits, hours: 1 });
+  }
+  push({ type: "endow", txid: "tx-endow-sub", principal: "subscriber-a", credits: 8000, source: "subscription-grant" });
+
+  const stages = plan.shards.map((s) => ({
+    nodeId: s.nodeId,
+    layers: `${s.start}-${s.end - 1}`,
+  }));
+  if (!plan.ok) {
+    rejected.push({
+      ok: false,
+      reason: "reject:unplaceable-no-block",
+      tx: { type: "placement", txid: "tx-place", modelFp: model.fingerprint },
+    });
+  } else {
+    const cost = plan.shards.length * 1000;
+    push({
+      type: "reserve",
+      txid: "tx-reserve-1",
+      principal: "subscriber-a",
+      credits: cost,
+      reservationId: "rsv-1",
+      epoch: 1,
+    });
+    push({
+      type: "placement",
+      txid: "tx-place-1",
+      principal: "subscriber-a",
+      reservationId: "rsv-1",
+      modelFp: model.fingerprint,
+      mode: plan.mode,
+      stages: stages.length,
+      epoch: 1,
+    });
+    push({
+      type: "grant",
+      txid: "tx-grant-1",
+      principal: "subscriber-a",
+      modelFp: model.fingerprint,
+      scope: "stage-exec",
+      epoch: 1,
+    });
+    push({
+      type: "settle",
+      txid: "tx-settle-1",
+      principal: "subscriber-a",
+      reservationId: "rsv-1",
+      tokenCount: 128,
+      epoch: 1,
+    });
+  }
+
+  push({ type: "reserve", txid: "tx-reserve-1", principal: "subscriber-a", credits: 1000, reservationId: "rsv-1", epoch: 1 });
+  push({ type: "reserve", txid: "tx-reserve-replay", principal: "subscriber-a", credits: 1000, reservationId: "rsv-1", epoch: 1 });
+  push({ type: "transfer", txid: "tx-xfer", from: "subscriber-a", to: "subscriber-b", credits: 1000 });
+  push({ type: "settle", txid: "tx-prompt", principal: "subscriber-a", epoch: 1, prompt: "secret prompt" });
+  push({ type: "revoke", txid: "tx-revoke-1", principal: "subscriber-a", reason: "subscriber-revoke" });
+  push({ type: "settle", txid: "tx-settle-late", principal: "subscriber-a", reservationId: "rsv-1", tokenCount: 16, epoch: 1 });
+
+  const verification = verifyChain(chain);
+  const tamper = verifyChain(tamperedCopy(chain));
+  return {
+    chain,
+    state,
+    rejected,
+    verification,
+    tamper,
+    plan: {
+      ok: plan.ok,
+      mode: plan.mode,
+      stages: plan.shards.map((s) => ({
+        nodeId: s.nodeId,
+        layers: `${s.start}–${s.end - 1}`,
+        layerCount: s.layers,
+      })),
+      stageCount: plan.shards.length,
+      model: model.name,
+      fingerprint: model.fingerprint,
+      kvPerToken: model.kvPerToken,
+      weightBytes: model.weightBytes,
+    },
+    payloadBytes: chain.reduce((sum, block) => sum + (schemaViolation(block.tx) ? 1 : 0), 0),
+  };
+}
+
+function isDirectRun() {
+  const argv = globalThis.process?.argv;
+  return Array.isArray(argv) && typeof argv[1] === "string" && argv[1].endsWith("ledger.mjs");
+}
+
+if (isDirectRun()) {
+  const protocol = runProtocol();
+  const latency = latencyModel({ tokens: 256, stages: protocol.plan.stageCount || 1, rttMs: 40, batchTokens: 64 });
+  console.log(
+    JSON.stringify(
+      {
+        blocks: protocol.chain.length,
+        verified: protocol.verification.ok,
+        tamperOk: protocol.tamper.ok,
+        tamperReason: protocol.tamper.reason,
+        tamperAt: protocol.tamper.at,
+        rejected: protocol.rejected.map((r) => r.reason),
+        mode: protocol.plan.mode,
+        stages: protocol.plan.stages,
+        balances: protocol.state.balances,
+        epoch: protocol.state.epoch,
+        revoked: protocol.state.revoked,
+        latency,
+        payloadBytes: protocol.payloadBytes,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+/* Browser laboratory. Expects the planner and ledger in the same classic script. */
+function mountLab(root) {
+  const protocol = runProtocol();
+  const state = { context: 4096, pathId: "key", tokens: 256, rtt: 40, chips: [16, 16, 16], leaveP: 0.2, verdict: "Chain verifies. Payload bytes on the ledger: 0." };
+  const contexts = [1024, 2048, 4096, 8192, 16384, 32768];
+  const rtts = [5, 20, 40, 100];
+  const tokens = [32, 128, 256, 1024];
+
+  root.innerHTML = [
+    '<p class="brand">THOX.ai</p>',
+    "<h1>Inference on hardware you already own</h1>",
+    '<p class="muted">Same planner as the specification. CALCULATED and SIMULATED. Not a device measurement.</p>',
+    '<hr class="rule">',
+    '<nav class="sticky">',
+    '<a href="#lab-freedom">Freedom</a><a href="#lab-bench">Bench</a><a href="#lab-latency">Latency</a><a href="#lab-ledger">Ledger</a><a href="#lab-place">Placement</a>',
+    '<button type="button" id="show-paper" class="text">Read the specification</button>',
+    "</nav>",
+    '<section id="lab-freedom"><h2>Where the session runs</h2><div id="ctx"></div><p id="freedom-lead" class="muted"></p><div id="paths" class="grid3"></div><article id="path" class="card good"></article></section>',
+    '<section id="lab-bench"><h2>Build a pool</h2><p class="muted">D23 is the code of record. The printed household cross-check has no reserve floor. If they disagree, D23 is the one that may write a placement block.</p><div id="chips"></div><p id="chip-list" class="mono"></p><div id="bench" class="grid2"></div><div id="bench-table" class="scroll"></div></section>',
+    '<section id="lab-latency"><h2>What the token loop waits on</h2><p class="muted">Ledger fixture is the three-host pipeline at context 4096. The round trip is an assumption, not a measurement.</p><div id="latency-controls"></div><div id="meters" class="grid3"></div></section>',
+    '<section id="lab-ledger"><h2>Metadata chain</h2><p id="verdict" class="mono green"></p><p id="ledger-lead" class="muted"></p><div class="row"><button type="button" class="primary" id="recompute">Recompute chain</button><button type="button" id="tamper">Flip a committed record</button><button type="button" id="download-chain">Download chain</button></div><ol id="blocks"></ol><h3>Refused before a block exists</h3><ul id="rejected"></ul></section>',
+    '<section id="lab-place"><h2>Admission</h2><div id="place" class="scroll"></div><h3>Churn, simulated</h3><div id="leave"></div><p id="churn"></p><div class="row"><button type="button" id="download-evidence">Download admission evidence</button></div></section>',
+    '<footer>Your AI. Your Data. Your Rules.</footer>',
+  ].join("");
+
+  document.getElementById("show-paper").onclick = function () { showView("paper"); };
+
+  function credits(milli) {
+    const value = milli / 1000;
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+  function delay(ms) {
+    if (ms === 0) return "0 ms";
+    if (ms >= 1000) return (ms / 1000).toFixed(1) + " s";
+    return ms + " ms";
+  }
+  function shortHash(hash) { return hash.slice(0, 8) + "…" + hash.slice(-4); }
+  function buttons(host, values, current, onPick, suffix) {
+    host.innerHTML = "";
+    values.forEach(function (value) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = suffix ? value + suffix : String(value);
+      button.setAttribute("aria-pressed", String(value === current));
+      if (value === current) button.className = "primary";
+      button.onclick = function () { onPick(value); };
+      host.appendChild(button);
+    });
+  }
+  function planLine(plan) {
+    if (!plan.ok) return "unplaceable, " + plan.unplaced + " layers left";
+    return plan.mode + (plan.shards ? "" : "");
+  }
+  function stageLine(shards) {
+    return (shards || []).map(function (s) { return s.nodeId + " " + s.start + "–" + (s.end - 1); }).join(" · ") || "no stage";
+  }
+
+  function draw() {
+    const evidence = buildEvidence(state.context);
+    const freedom = freedomPaths(state.context);
+    const path = freedom.paths.find(function (item) { return item.id === state.pathId; }) || freedom.paths[0];
+    buttons(document.getElementById("ctx"), contexts, state.context, function (value) { state.context = value; draw(); });
+    document.getElementById("freedom-lead").textContent =
+      "Frozen " + freedom.model + ", context " + freedom.context + ". One credit is one usable GiB-hour, a stated constant, not a price. An idle key earns " +
+      credits(freedom.paths[0].earnMilliPerHour) + " credits an hour, enough for " + freedom.sessionsPerIdleKeyHour +
+      " community spills at this context. A grant of " + credits(freedom.grantMilli) + " credits covers " + freedom.sessionsPerGrant + " spills, with " + credits(freedom.grantRemainder) + " left.";
+    const paths = document.getElementById("paths");
+    paths.innerHTML = "";
+    freedom.paths.forEach(function (item) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("aria-pressed", String(item.id === state.pathId));
+      if (item.id === state.pathId) button.className = "good";
+      button.innerHTML = "<strong>" + item.product + "</strong><span class=\"mono muted\">" + item.ramLabel + "</span>";
+      button.onclick = function () { state.pathId = item.id; draw(); };
+      paths.appendChild(button);
+    });
+    const alone = path.alone && !path.alone.ok ? " · alone, " + path.alone.unplaced + " layers left" : "";
+    document.getElementById("path").innerHTML =
+      '<p class="mono green">' + (path.plan.ok ? path.plan.mode : "unplaceable") + "</p><h3>" + path.stance + "</h3><p class=\"big green\">" +
+      credits(path.communityMilli) + ' credits</p><p class="muted">Community spend for this session. Home whole-request is zero.</p><p>' +
+      path.enhances + '</p><p class="mono muted">' + path.plan.stages.map(function (s) { return s.nodeId + " " + s.layers; }).join(" · ") + alone + "</p>";
+
+    const nodes = state.chips.map(function (ram, index) {
+      return makeNode({ id: "b" + index, role: "contributor", principal: "p" + index, kind: "opt-in-host", ramGb: ram, offers: true });
+    });
+    const model = qwen36(state.context);
+    const d23 = planShards(model, nodes);
+    const cross = planNonsummed(model, nodes);
+    const chipHost = document.getElementById("chips");
+    chipHost.innerHTML = "";
+    [8, 16, 32, 64, 128].forEach(function (ram) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Add " + ram + " GB";
+      button.onclick = function () { if (state.chips.length < 8) { state.chips.push(ram); draw(); } };
+      chipHost.appendChild(button);
+    });
+    [["Remove last", function () { state.chips = state.chips.slice(0, -1); }], ["Three 16 GB", function () { state.chips = [16, 16, 16]; }], ["2/4/6 floors", function () { state.chips = [2, 4, 6]; }], ["One 64 GB", function () { state.chips = [64]; }]].forEach(function (pair) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = pair[0];
+      button.onclick = function () { pair[1](); draw(); };
+      chipHost.appendChild(button);
+    });
+    document.getElementById("chip-list").textContent = state.chips.length ? state.chips.map(function (ram) { return ram + " GB"; }).join(" · ") : "No hosts. Unplaceable.";
+    function card(title, plan) {
+      const mode = plan.ok ? plan.mode : "unplaceable, " + plan.unplaced + " left";
+      return '<article class="card' + (plan.ok ? "" : "") + '"><p class="mono muted">' + title + '</p><p class="big">' + mode + '</p><p class="mono muted">' + stageLine(plan.shards) + "</p></article>";
+    }
+    document.getElementById("bench").innerHTML = card("D23, code of record", d23) + card("Printed-rule cross-check", cross);
+    const rows = (d23.shards || []).map(function (s) {
+      return "<tr><td class=\"mono\">" + s.nodeId + " · " + s.ramGb + " GB</td><td class=\"mono\">" + s.start + "–" + (s.end - 1) + "</td><td class=\"mono\">" + s.required.toLocaleString("en-US") + "</td><td class=\"mono\">" + s.usableRam.toLocaleString("en-US") + "</td><td class=\"mono\">" + (s.usableRam - s.required).toLocaleString("en-US") + "</td></tr>";
+    }).join("");
+    document.getElementById("bench-table").innerHTML = rows ? '<table><thead><tr><th>Host</th><th>Layers</th><th>Required</th><th>Usable</th><th>Slack</th></tr></thead><tbody>' + rows + "</tbody></table>" : "";
+
+    const latency = latencyModel({ tokens: state.tokens, stages: protocol.plan.stageCount || 1, rttMs: state.rtt, batchTokens: 64 });
+    const controls = document.getElementById("latency-controls");
+    controls.innerHTML = '<span class="mono muted">Tokens</span><span id="tok"></span><span class="mono muted">Assumed RTT</span><span id="rtt"></span>';
+    buttons(document.getElementById("tok"), tokens, state.tokens, function (value) { state.tokens = value; draw(); });
+    buttons(document.getElementById("rtt"), rtts, state.rtt, function (value) { state.rtt = value; draw(); }, " ms");
+    const scale = Math.max(latency.perHopCommitMs, latency.perTokenCommitMs, 1);
+    function meter(label, detail, value, note, good, width) {
+      return '<article class="card ' + (good ? "good" : "") + '"><p class="mono muted">' + label + "</p><h3>" + detail + '</h3><p class="big ' + (good ? "green" : "") + '">' + value + '</p><p class="muted">' + note + '</p><div class="track"><div class="' + (good ? "bar goodbar" : "bar") + '" style="width:' + width + '%"></div></div></article>';
+    }
+    document.getElementById("meters").innerHTML =
+      meter("This specification", "Off-path settlement", delay(latency.offPathTokenLoopMs), "Added inside the token loop", true, 0) +
+      meter("Rejected", "Commit every token", delay(latency.perTokenCommitMs), state.tokens + " × " + state.rtt + " ms", false, (latency.perTokenCommitMs / scale) * 100) +
+      meter("Rejected", "Commit every hop", delay(latency.perHopCommitMs), state.tokens + " × " + latency.hops + " hops × " + state.rtt + " ms", false, (latency.perHopCommitMs / scale) * 100);
+
+    document.getElementById("verdict").textContent = state.verdict;
+    document.getElementById("ledger-lead").textContent =
+      protocol.chain.length + " blocks. Subscriber balance after the reservation: " + protocol.state.balances["subscriber-a"] + " milli-credits. Epoch " + protocol.state.epoch + " because the grant was revoked.";
+    document.getElementById("blocks").innerHTML = protocol.chain.map(function (block) {
+      return "<li><span class=\"mono muted\">" + String(block.index).padStart(2, "0") + "</span> <span class=\"mono green\">" + block.tx.type + "</span> <span class=\"mono muted\">" + shortHash(block.hash) + "</span></li>";
+    }).join("");
+    document.getElementById("rejected").innerHTML = protocol.rejected.map(function (item) {
+      return "<li><span class=\"mono\">" + item.reason + "</span> <span class=\"muted\">" + item.tx.type + "</span></li>";
+    }).join("");
+
+    const placeRows = evidence.rows.map(function (row) {
+      const d23mode = row.d23.plan.ok ? row.d23.plan.mode : "unplaceable, " + row.d23.plan.unplaced + " left";
+      const crossMode = row.nonsummed.ok ? row.nonsummed.mode : "unplaceable, " + row.nonsummed.unplaced + " left";
+      const disagree = (row.d23.plan.ok ? row.d23.plan.mode : "unplaceable") !== (row.nonsummed.ok ? row.nonsummed.mode : "unplaceable");
+      const stages = row.d23.plan.stages.map(function (s) { return s.nodeId + " " + s.layers; }).join(" · ") || "—";
+      return '<tr class="' + (disagree ? "band" : "") + '"><td>' + row.title + '</td><td class="mono">' + d23mode + '</td><td class="mono">' + crossMode + '</td><td class="mono">' + stages + "</td></tr>";
+    }).join("");
+    document.getElementById("place").innerHTML = '<table class="wide"><thead><tr><th>Scenario</th><th>D23</th><th>Printed cross-check</th><th>D23 stages</th></tr></thead><tbody>' + placeRows + "</tbody></table>";
+    const leave = document.getElementById("leave");
+    leave.innerHTML = "";
+    [0.05, 0.2, 0.35, 0.5].forEach(function (p) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "p=" + p;
+      button.setAttribute("aria-pressed", String(p === state.leaveP));
+      if (p === state.leaveP) button.className = "primary";
+      button.onclick = function () { state.leaveP = p; draw(); };
+      leave.appendChild(button);
+    });
+    const churn = simulateChurn(qwen36(state.context), communityPoolNodes(), { trials: 200, p: state.leaveP, seed: 20261110 });
+    document.getElementById("churn").textContent =
+      "Full pool, " + churn.trials + " trials, seed " + churn.seed + ", p=" + churn.leaveProbability + ": placed " + churn.placed + ", whole-request " + churn.wholeRequest + ", pipeline " + churn.pipeline + ". Histogram " + JSON.stringify(churn.histogram) + ". " + churn.note;
+    document.getElementById("download-evidence").onclick = function () {
+      download("community-mesh-evidence.md", evidenceMarkdown(buildEvidence(state.context)));
+    };
+  }
+
+  document.getElementById("recompute").onclick = function () {
+    const result = verifyChain(protocol.chain);
+    state.verdict = result.ok ? "Recomputed hash chain verifies." : "Verify failed at block " + result.at + ": " + result.reason;
+    draw();
+  };
+  document.getElementById("tamper").onclick = function () {
+    const result = verifyChain(tamperedCopy(protocol.chain));
+    state.verdict = result.ok ? "Tamper was not detected." : "Tamper detected at block " + result.at + ": " + result.reason + ". Token loop unchanged.";
+    draw();
+  };
+  document.getElementById("download-chain").onclick = function () {
+    download("community-mesh-ledger.json", JSON.stringify(protocol.chain, null, 2));
+  };
+  draw();
+}
+
+function download(name, text) {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function showView(name) {
+  document.getElementById("view-paper").hidden = name !== "paper";
+  document.getElementById("view-lab").hidden = name !== "lab";
+  window.scrollTo(0, 0);
+}
+
+mountLab(document.getElementById("view-lab"));
+document.getElementById("open-lab").onclick=function(){showView("lab");};</script>
+</body>
+</html>

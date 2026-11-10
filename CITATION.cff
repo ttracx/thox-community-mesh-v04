@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: "Household first, community only as overflow"
+message: "Research specification v0.4. Not peer reviewed. Not a production authorization."
+type: report
+authors:
+  - family-names: Ross
+    given-names: Craig
+  - family-names: Xaypanya
+    given-names: Tommy
+year: 2026
+date-released: 2026-11-10
+version: "0.4"
+identifiers: []
+repository-code: "https://github.com/ttracx/thox-community-mesh-v04"
+abstract: >-
+  MeshStack subscribers may opt idle hardware into a private overflow for
+  models that do not fit a household. Admission is the v2 planner of record
+  (decision D23). The audit log is a permissioned metadata hash chain and is
+  not on the token path. No device measurement, price, or production community
+  mesh is claimed. Synthetic agents are not authors.
+keywords:
+  - MeshStack
+  - distributed inference
+  - THOX
+  - community mesh
+license: "LicenseRef-THOX-internal"

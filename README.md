@@ -1,5 +1,9 @@
 # THOX Community Mesh, specification v0.4
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![THOX.ai](https://img.shields.io/badge/THOX.ai-LLC-red.svg)
+![Repository](https://img.shields.io/badge/repository-ttracx%2Fthox--community--mesh--v04-0B1220)
+
 Craig Ross and Tommy Xaypanya. No synthetic author.
 
 Open [index.html](index.html). It is one file: the research specification and a virtual laboratory that runs the same admission planner. No install. No server. No network call.
@@ -36,3 +40,17 @@ An arXiv identifier does not exist. Do not index this on Hugging Face until one 
 Code of record for admission remains `ttracx/thox-meshstack-inference`, decisions D22 and D23. This repository does not amend them.
 
 Your AI. Your Data. Your Rules.
+
+---
+
+## Legal
+
+Copyright (c) 2024-2026 THOX.ai LLC. All rights reserved.
+
+**THOX.ai LLC**
+- CTO: Tommy Xaypanya
+- CEO: Craig Ross
+
+Licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+Unauthorized copying, modification, merger, publication, distribution, sublicensing, and/or selling of this software, via any medium, is strictly prohibited without prior written consent from THOX.ai LLC.
